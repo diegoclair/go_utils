@@ -1,2 +1,2 @@
 # utils_lib-go
-Go utils with comon errors, dates, crypto and mysql errors
+Go utils with common http rest errors and date formats.
