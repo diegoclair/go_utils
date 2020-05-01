@@ -9,7 +9,16 @@ type RestErr struct {
 	Error      string `json:"error"`
 }
 
-// NewBadRequestError returns a bad_request code error with string message error
+// NewRestError returns a instace of type restErr
+func NewRestError(message string, status int, err string) *RestErr {
+	return &RestErr{
+		Message:    message,
+		StatusCode: status,
+		Error:      err,
+	}
+}
+
+// NewBadRequestError returns a bad_request code error with your string message error
 func NewBadRequestError(message string) *RestErr {
 	return &RestErr{
 		Message:    message,
@@ -18,7 +27,7 @@ func NewBadRequestError(message string) *RestErr {
 	}
 }
 
-// NewNotFoundError returns a not_found code error with string message error
+// NewNotFoundError returns a not_found code error with your string message error
 func NewNotFoundError(message string) *RestErr {
 	return &RestErr{
 		Message:    message,
@@ -27,11 +36,20 @@ func NewNotFoundError(message string) *RestErr {
 	}
 }
 
-// NewInternalServerError returns a not_found code error with string message error
+// NewInternalServerError returns a not_found code error with your string message error
 func NewInternalServerError(message string) *RestErr {
 	return &RestErr{
 		Message:    message,
 		StatusCode: http.StatusInternalServerError,
 		Error:      "internal_server_error",
+	}
+}
+
+// NewUnauthorizedError returns a unauthorized code error with your string message error
+func NewUnauthorizedError(message string) *RestErr {
+	return &RestErr{
+		Message:    message,
+		StatusCode: http.StatusUnauthorized,
+		Error:      "unauthorized",
 	}
 }
