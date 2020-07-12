@@ -1,6 +1,8 @@
 package resterrors
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -36,6 +38,15 @@ func NewRestError(message string, status int, err string) RestErr {
 		ErrStatusCode: status,
 		ErrError:      err,
 	}
+}
+
+// NewRestErrorFromBytes returns a RestErr response format by result from another api using resterror response
+func NewRestErrorFromBytes(bytes []byte) (RestErr, error) {
+	var apiErr restErr
+	if err := json.Unmarshal(bytes, &apiErr); err != nil {
+		return nil, errors.New("invalid restError json")
+	}
+	return apiErr, nil
 }
 
 // NewBadRequestError returns a bad_request code error with your string message error
