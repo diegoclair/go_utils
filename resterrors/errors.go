@@ -84,3 +84,12 @@ func NewUnauthorizedError(message string) RestErr {
 		ErrError:      "unauthorized",
 	}
 }
+
+// NewUnprocessableEntity returns a unprocessable_entity code error with your string message error
+func NewUnprocessableEntity(message string) RestErr {
+	return restErr{
+		ErrMessage:    message,
+		ErrStatusCode: http.StatusUnprocessableEntity,
+		ErrError:      "unprocessable_entity",
+	}
+}
