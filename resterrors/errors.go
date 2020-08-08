@@ -12,31 +12,39 @@ type RestErr interface {
 	Message() string
 	StatusCode() int
 	Error() string
+	Causes() []interface{}
 }
 
 type restErr struct {
-	ErrMessage    string `json:"message"`
-	ErrStatusCode int    `json:"status_code"`
-	ErrError      string `json:"error"`
+	ErrMessage    string        `json:"message"`
+	ErrStatusCode int           `json:"status_code"`
+	ErrError      string        `json:"error"`
+	ErrCauses     []interface{} `json:"causes"`
 }
 
 func (e restErr) Message() string {
 	return e.ErrMessage
 }
+
 func (e restErr) StatusCode() int {
 	return e.ErrStatusCode
 }
 
 func (e restErr) Error() string {
-	return fmt.Sprintf("message: %s - statusCode: %d - error: %s", e.ErrMessage, e.ErrStatusCode, e.ErrError)
+	return fmt.Sprintf("message: %s - statusCode: %d - error: %s - causes: %v", e.ErrMessage, e.ErrStatusCode, e.ErrError, e.ErrCauses)
+}
+
+func (e restErr) Causes() []interface{} {
+	return e.ErrCauses
 }
 
 // NewRestError returns a instace of type restErr
-func NewRestError(message string, status int, err string) RestErr {
+func NewRestError(message string, status int, err string, causes []interface{}) RestErr {
 	return restErr{
 		ErrMessage:    message,
 		ErrStatusCode: status,
 		ErrError:      err,
+		ErrCauses:     causes,
 	}
 }
 
@@ -44,7 +52,7 @@ func NewRestError(message string, status int, err string) RestErr {
 func NewRestErrorFromBytes(bytes []byte) (RestErr, error) {
 	var apiErr restErr
 	if err := json.Unmarshal(bytes, &apiErr); err != nil {
-		return nil, errors.New("invalid restError json")
+		return nil, errors.New("Invalid restError json")
 	}
 	return apiErr, nil
 }
@@ -86,10 +94,15 @@ func NewUnauthorizedError(message string) RestErr {
 }
 
 // NewUnprocessableEntity returns a unprocessable_entity code error with your string message error
-func NewUnprocessableEntity(message string) RestErr {
-	return restErr{
+func NewUnprocessableEntity(message string, err []string) RestErr {
+	result := restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusUnprocessableEntity,
 		ErrError:      "unprocessable_entity",
 	}
+	if err != nil {
+		result.ErrCauses = append(result.ErrCauses, err)
+	}
+
+	return result
 }
