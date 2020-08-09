@@ -9,7 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// ValidateStruct - valid
+// ValidateStruct - validate if the input is valid for requirements of a struct
 func ValidateStruct(dataSet interface{}) resterrors.RestErr {
 
 	validate := validator.New()
@@ -35,7 +35,7 @@ func ValidateStruct(dataSet interface{}) resterrors.RestErr {
 			if name == "" {
 				name = strings.ToLower(err.StructField())
 			}
-			fmt.Println(field.Type)
+
 			switch err.Tag() {
 			case "required":
 				errMessage = append(errMessage, fmt.Sprintf("The field '%s' is required", name))
@@ -63,8 +63,9 @@ func ValidateStruct(dataSet interface{}) resterrors.RestErr {
 			}
 		}
 
-		var result map[string][]string
-		result["validation_fields"] = errMessage
+		var result = map[string][]string{
+			"validation_fields": errMessage,
+		}
 
 		return resterrors.NewUnprocessableEntity("Invalid input data", result)
 	}
