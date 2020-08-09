@@ -12,14 +12,14 @@ type RestErr interface {
 	Message() string
 	StatusCode() int
 	Error() string
-	Causes() []interface{}
+	Causes() interface{}
 }
 
 type restErr struct {
-	ErrMessage    string        `json:"message"`
-	ErrStatusCode int           `json:"status_code"`
-	ErrError      string        `json:"error"`
-	ErrCauses     []interface{} `json:"causes"`
+	ErrMessage    string      `json:"message"`
+	ErrStatusCode int         `json:"status_code"`
+	ErrError      string      `json:"error"`
+	ErrCauses     interface{} `json:"causes"`
 }
 
 func (e restErr) Message() string {
@@ -34,12 +34,12 @@ func (e restErr) Error() string {
 	return fmt.Sprintf("message: %s - statusCode: %d - error: %s - causes: %v", e.ErrMessage, e.ErrStatusCode, e.ErrError, e.ErrCauses)
 }
 
-func (e restErr) Causes() []interface{} {
+func (e restErr) Causes() interface{} {
 	return e.ErrCauses
 }
 
 // NewRestError returns a instace of type restErr
-func NewRestError(message string, status int, err string, causes []interface{}) RestErr {
+func NewRestError(message string, status int, err string, causes interface{}) RestErr {
 	return restErr{
 		ErrMessage:    message,
 		ErrStatusCode: status,
@@ -94,14 +94,14 @@ func NewUnauthorizedError(message string) RestErr {
 }
 
 // NewUnprocessableEntity returns a unprocessable_entity code error with your string message error
-func NewUnprocessableEntity(message string, err []string) RestErr {
+func NewUnprocessableEntity(message string, err interface{}) RestErr {
 	result := restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusUnprocessableEntity,
 		ErrError:      "unprocessable_entity",
 	}
 	if err != nil {
-		result.ErrCauses = append(result.ErrCauses, err)
+		result.ErrCauses = err
 	}
 
 	return result
