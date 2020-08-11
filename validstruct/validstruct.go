@@ -43,14 +43,26 @@ func ValidateStruct(dataSet interface{}) resterrors.RestErr {
 			case "email":
 				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should be a valid email", name))
 
+			case "eq":
+				errMessage = append(errMessage, fmt.Sprintf("The value '%s' should be equal to the %s", name, err.Param()))
+
 			case "eqfield":
-				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should be equal to the %s", name, err.Param()))
+				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should be equal to the field %s", name, err.Param()))
+
+			case "ne":
+				errMessage = append(errMessage, fmt.Sprintf("The value '%s' should not be equal to the %s", name, err.Param()))
 
 			case "gte":
 				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should be greater than or equal %s", name, err.Param()))
 
+			case "gt":
+				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should be greater than %s", name, err.Param()))
+
 			case "lte":
 				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should be less than or equal %s", name, err.Param()))
+
+			case "lt":
+				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should be less than %s", name, err.Param()))
 
 			case "max":
 				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should have the max lenhgt or value: %s", name, err.Param()))
