@@ -70,6 +70,9 @@ func ValidateStruct(dataSet interface{}) resterrors.RestErr {
 			case "min":
 				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should have the minimun lenhgt or value: %s", name, err.Param()))
 
+			case "uuid4":
+				errMessage = append(errMessage, fmt.Sprintf("The format of '%s' should be uuid4: %s", name, err.Param()))
+
 			default:
 				errMessage = append(errMessage, fmt.Sprintf("The field '%s' is invalid.", name))
 			}
