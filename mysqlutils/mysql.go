@@ -20,21 +20,19 @@ func HandleMySQLError(err error) resterrors.RestErr {
 	sqlErr, exists := err.(*mysql.MySQLError)
 	if !exists {
 		if strings.Contains(err.Error(), errorNoRows) {
-			return resterrors.NewNotFoundError("No records find with the parameters")
+			return resterrors.NewNotFoundError("No records find with the parameters", nil)
 		}
-		return resterrors.NewInternalServerError(
-			fmt.Sprintf("Error database response: %s", err.Error()))
+		return resterrors.NewInternalServerError("Error database response", err.Error())
 	}
 
 	switch sqlErr.Number {
 	case duplicatedKeyCode:
 		duplicatedKey := between(sqlErr.Message, "key '", "_UNIQUE")
 		duplicatedKeyValue := between(sqlErr.Message, "entry '", "' for key")
-		return resterrors.NewBadRequestError(fmt.Sprintf("The %s %s already exists", duplicatedKey, duplicatedKeyValue))
+		return resterrors.NewBadRequestError(fmt.Sprintf("The %s %s already exists", duplicatedKey, duplicatedKeyValue), nil)
 	}
 
-	return resterrors.NewInternalServerError(
-		fmt.Sprintf("Error trying to processing database request: %s", err.Error()))
+	return resterrors.NewInternalServerError("Error trying to processing database request", err.Error())
 }
 
 func between(value string, a string, b string) string {

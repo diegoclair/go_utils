@@ -19,7 +19,7 @@ func ValidateStruct(dataSet interface{}) resterrors.RestErr {
 
 		invalidArgument, ok := err.(*validator.InvalidValidationError)
 		if ok {
-			return resterrors.NewInternalServerError("Invalid argument passed to struct: " + fmt.Sprint(invalidArgument))
+			return resterrors.NewInternalServerError("Invalid argument passed to struct: "+fmt.Sprint(invalidArgument), err)
 		}
 
 		reflected := reflect.ValueOf(dataSet)

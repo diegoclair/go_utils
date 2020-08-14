@@ -58,50 +58,52 @@ func NewRestErrorFromBytes(bytes []byte) (RestErr, error) {
 }
 
 // NewBadRequestError returns a bad_request code error with your string message error
-func NewBadRequestError(message string) RestErr {
+func NewBadRequestError(message string, causes interface{}) RestErr {
 	return restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusBadRequest,
 		ErrError:      "bad_request",
+		ErrCauses:     causes,
 	}
 }
 
 // NewNotFoundError returns a not_found code error with your string message error
-func NewNotFoundError(message string) RestErr {
+func NewNotFoundError(message string, causes interface{}) RestErr {
 	return restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusNotFound,
 		ErrError:      "not_found",
+		ErrCauses:     causes,
 	}
 }
 
 // NewInternalServerError returns a not_found code error with your string message error
-func NewInternalServerError(message string) RestErr {
+func NewInternalServerError(message string, causes interface{}) RestErr {
 	return &restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusInternalServerError,
 		ErrError:      "internal_server_error",
+		ErrCauses:     causes,
 	}
 }
 
 // NewUnauthorizedError returns a unauthorized code error with your string message error
-func NewUnauthorizedError(message string) RestErr {
+func NewUnauthorizedError(message string, causes interface{}) RestErr {
 	return &restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusUnauthorized,
 		ErrError:      "unauthorized",
+		ErrCauses:     causes,
 	}
 }
 
 // NewUnprocessableEntity returns a unprocessable_entity code error with your string message error
-func NewUnprocessableEntity(message string, err interface{}) RestErr {
+func NewUnprocessableEntity(message string, causes interface{}) RestErr {
 	result := restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusUnprocessableEntity,
 		ErrError:      "unprocessable_entity",
-	}
-	if err != nil {
-		result.ErrCauses = err
+		ErrCauses:     causes,
 	}
 
 	return result
