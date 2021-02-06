@@ -2,7 +2,6 @@ package validstruct
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 
 	"github.com/diegoclair/go_utils-lib/resterrors"
@@ -22,19 +21,11 @@ func ValidateStruct(dataSet interface{}) resterrors.RestErr {
 			return resterrors.NewInternalServerError("Invalid argument passed to struct: "+fmt.Sprint(invalidArgument), err)
 		}
 
-		reflected := reflect.ValueOf(dataSet)
-
-		var name string
 		var errMessage []string
 
 		for _, err := range err.(validator.ValidationErrors) {
 
-			field, _ := reflected.Type().FieldByName(err.StructField())
-
-			name = field.Tag.Get("json")
-			if name == "" {
-				name = strings.ToLower(err.StructField())
-			}
+			name := strings.ToLower(err.StructField())
 
 			switch err.Tag() {
 			case "required":
