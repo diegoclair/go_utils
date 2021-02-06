@@ -69,11 +69,7 @@ func ValidateStruct(dataSet interface{}) resterrors.RestErr {
 			}
 		}
 
-		var result = map[string][]string{
-			"validation_fields": errMessage,
-		}
-
-		return resterrors.NewUnprocessableEntity("Invalid input data", result)
+		return resterrors.NewUnprocessableEntity("Invalid input data", errMessage)
 	}
 
 	return nil
