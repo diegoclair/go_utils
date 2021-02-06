@@ -2,7 +2,6 @@ package validstruct
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/diegoclair/go_utils-lib/v2/resterrors"
 	"github.com/go-playground/validator/v10"
@@ -25,7 +24,7 @@ func ValidateStruct(dataSet interface{}) resterrors.RestErr {
 
 		for _, err := range err.(validator.ValidationErrors) {
 
-			name := strings.ToLower(err.StructField())
+			name := err.StructField()
 
 			switch err.Tag() {
 			case "required":
