@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/diegoclair/go_utils-lib/resterrors"
+	"github.com/diegoclair/go_utils-lib/v2/resterrors"
 	"github.com/go-sql-driver/mysql"
 )
 
