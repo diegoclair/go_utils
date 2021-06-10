@@ -29,7 +29,7 @@ func HandleMySQLError(err error) resterrors.RestErr {
 	case duplicatedKeyCode:
 		duplicatedKey := between(sqlErr.Message, "key '", "_UNIQUE")
 		duplicatedKeyValue := between(sqlErr.Message, "entry '", "' for key")
-		return resterrors.NewBadRequestError(fmt.Sprintf("The %s %s already exists", duplicatedKey, duplicatedKeyValue), nil)
+		return resterrors.NewConflictError(fmt.Sprintf("The %s %s already exists", duplicatedKey, duplicatedKeyValue), nil)
 	}
 
 	return resterrors.NewInternalServerError("Error trying to processing database request", err.Error())
