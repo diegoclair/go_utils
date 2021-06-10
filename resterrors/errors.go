@@ -52,7 +52,7 @@ func NewRestError(message string, status int, err string, causes interface{}) Re
 func NewRestErrorFromBytes(bytes []byte) (RestErr, error) {
 	var apiErr restErr
 	if err := json.Unmarshal(bytes, &apiErr); err != nil {
-		return nil, errors.New("Invalid restError json")
+		return nil, errors.New("invalid restError json")
 	}
 	return apiErr, nil
 }
@@ -103,6 +103,17 @@ func NewUnprocessableEntity(message string, causes interface{}) RestErr {
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusUnprocessableEntity,
 		ErrError:      "unprocessable_entity",
+		ErrCauses:     causes,
+	}
+
+	return result
+}
+
+func NewConflictError(message string, causes interface{}) RestErr {
+	result := restErr{
+		ErrMessage:    message,
+		ErrStatusCode: http.StatusConflict,
+		ErrError:      "conflict",
 		ErrCauses:     causes,
 	}
 
