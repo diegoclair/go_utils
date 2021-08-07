@@ -8,7 +8,7 @@ import (
 )
 
 // ValidateStruct - validate if the input is valid for requirements of a struct
-func ValidateStruct(dataSet interface{}) resterrors.RestErr {
+func ValidateStruct(dataSet interface{}) error {
 
 	validate := validator.New()
 
