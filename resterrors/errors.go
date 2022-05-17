@@ -62,7 +62,7 @@ func NewBadRequestError(message string, causes ...interface{}) RestErr {
 	return restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusBadRequest,
-		ErrError:      "bad_request",
+		ErrError:      http.StatusText(http.StatusBadRequest),
 		ErrCauses:     causes,
 	}
 }
@@ -72,7 +72,7 @@ func NewNotFoundError(message string, causes ...interface{}) RestErr {
 	return restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusNotFound,
-		ErrError:      "not_found",
+		ErrError:      http.StatusText(http.StatusNotFound),
 		ErrCauses:     causes,
 	}
 }
@@ -82,7 +82,7 @@ func NewInternalServerError(message string, causes ...interface{}) RestErr {
 	return &restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusInternalServerError,
-		ErrError:      "internal_server_error",
+		ErrError:      http.StatusText(http.StatusInternalServerError),
 		ErrCauses:     causes,
 	}
 }
@@ -92,7 +92,7 @@ func NewUnauthorizedError(message string, causes ...interface{}) RestErr {
 	return &restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusUnauthorized,
-		ErrError:      "unauthorized",
+		ErrError:      http.StatusText(http.StatusUnauthorized),
 		ErrCauses:     causes,
 	}
 }
@@ -102,7 +102,7 @@ func NewUnprocessableEntity(message string, causes ...interface{}) RestErr {
 	result := restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusUnprocessableEntity,
-		ErrError:      "unprocessable_entity",
+		ErrError:      http.StatusText(http.StatusUnprocessableEntity),
 		ErrCauses:     causes,
 	}
 
@@ -113,7 +113,7 @@ func NewConflictError(message string, causes ...interface{}) RestErr {
 	result := restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusConflict,
-		ErrError:      "conflict",
+		ErrError:      http.StatusText(http.StatusConflict),
 		ErrCauses:     causes,
 	}
 
