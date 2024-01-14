@@ -1,18 +1,54 @@
-package validstruct
+package validator
 
 import (
 	"fmt"
 
 	"github.com/diegoclair/go_utils-lib/v2/resterrors"
 	"github.com/go-playground/validator/v10"
+	"github.com/klassmann/cpfcnpj"
 )
 
-// ValidateStruct - validate if the input is valid for requirements of a struct
-func ValidateStruct(dataSet interface{}) error {
+type Validator interface {
+	ValidateStruct(dataSet interface{}) error
+}
 
-	validate := validator.New()
+type validatorImpl struct {
+	validator *validator.Validate
+}
 
-	err := validate.Struct(dataSet)
+// NewValidator returns a new instance of validator interface with the custom validations:
+// cpf - validate if the input is a valid cpf
+// cnpj - validate if the input is a valid cnpj
+func NewValidator() (Validator, error) {
+	v := validator.New()
+
+	err := v.RegisterValidation("cpf", func(fl validator.FieldLevel) bool {
+		cpf := cpfcnpj.NewCPF(fl.Field().String())
+		return cpf.IsValid()
+	})
+	if err != nil {
+		return nil, resterrors.NewInternalServerError("Error trying to register cpf validation", err)
+	}
+
+	err = v.RegisterValidation("cnpj", func(fl validator.FieldLevel) bool {
+		cnpj := cpfcnpj.NewCNPJ(fl.Field().String())
+		return cnpj.IsValid()
+	})
+	if err != nil {
+		return nil, resterrors.NewInternalServerError("Error trying to register cnpj validation", err)
+	}
+
+	return &validatorImpl{
+		validator: v,
+	}, nil
+}
+
+// ValidateStruct validates the given data set using the validator instance.
+// It returns an error if the validation fails, with detailed error messages for each validation rule that was not satisfied.
+// The error message includes information about the field name and the specific validation rule that failed.
+func (v *validatorImpl) ValidateStruct(dataSet interface{}) error {
+
+	err := v.validator.Struct(dataSet)
 	if err != nil {
 
 		invalidArgument, ok := err.(*validator.InvalidValidationError)
@@ -62,6 +98,12 @@ func ValidateStruct(dataSet interface{}) error {
 
 			case "uuid4":
 				errMessage = append(errMessage, fmt.Sprintf("The format of '%s' should be uuid4: %s", name, err.Param()))
+
+			case "cpf":
+				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should be a valid cpf", name))
+
+			case "cnpj":
+				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should be a valid cnpj", name))
 
 			default:
 				errMessage = append(errMessage, fmt.Sprintf("The field '%s' is invalid.", name))

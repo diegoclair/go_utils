@@ -5,6 +5,7 @@ go 1.21.6
 require (
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/go-sql-driver/mysql v1.7.1
+	github.com/klassmann/cpfcnpj v0.0.0-20200907140233-a595c5fd8de1
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.26.0
 )

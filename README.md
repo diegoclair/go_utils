@@ -18,6 +18,9 @@ This package provides a function for handling MySQL errors and converting them i
 
 This package provides functions for handling and formatting dates and times. For more details, refer to the [dateutils README](./dateutils/README.md).
 
+### validator Package
+This package provides a custom validator for Go structs, with additional validations for Brazilian CPF and CNPJ numbers. For more details, refer to the [validator README](./validator/README.md).
+
 ## Usage
 
 To use any of these packages, simply import them into your Go project.
@@ -25,5 +28,3 @@ To use any of these packages, simply import them into your Go project.
 ## Contribution
 
 If you want to constribute, just open a PR and I'll validate it =]
-
-
