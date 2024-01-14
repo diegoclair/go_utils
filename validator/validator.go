@@ -9,6 +9,9 @@ import (
 )
 
 type Validator interface {
+	// ValidateStruct validates the given data set using the validator instance.
+	// It returns an error if the validation fails, with detailed error messages for each validation rule that was not satisfied.
+	// The error message includes information about the field name and the specific validation rule that failed.
 	ValidateStruct(dataSet interface{}) error
 }
 
@@ -43,9 +46,6 @@ func NewValidator() (Validator, error) {
 	}, nil
 }
 
-// ValidateStruct validates the given data set using the validator instance.
-// It returns an error if the validation fails, with detailed error messages for each validation rule that was not satisfied.
-// The error message includes information about the field name and the specific validation rule that failed.
 func (v *validatorImpl) ValidateStruct(dataSet interface{}) error {
 
 	err := v.validator.Struct(dataSet)
