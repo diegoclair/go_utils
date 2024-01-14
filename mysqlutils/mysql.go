@@ -27,6 +27,8 @@ func HandleMySQLError(err error) resterrors.RestErr {
 
 	switch sqlErr.Number {
 	case duplicatedKeyCode:
+		// example: Error 1062: Duplicate entry 'test@gmail' for key 'users_email_uindex'
+		// will return: The email test@gmail already exists
 		duplicatedKey := between(sqlErr.Message, "key '", "_UNIQUE")
 		duplicatedKeyValue := between(sqlErr.Message, "entry '", "' for key")
 		return resterrors.NewConflictError(fmt.Sprintf("The %s %s already exists", duplicatedKey, duplicatedKeyValue))
@@ -41,14 +43,17 @@ func between(value string, a string, b string) string {
 	if posFirst == -1 {
 		return ""
 	}
+
 	posLast := strings.Index(value, b)
 	if posLast == -1 {
 		return ""
 	}
+
 	posFirstAdjusted := posFirst + len(a)
 	if posFirstAdjusted >= posLast {
 		return ""
 	}
+
 	return value[posFirstAdjusted:posLast]
 }
 

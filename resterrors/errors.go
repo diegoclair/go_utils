@@ -49,6 +49,7 @@ func NewRestError(message string, status int, err string, causes ...interface{})
 }
 
 // NewRestErrorFromBytes returns a RestErr response format by result from another api using resterror response
+// example: if you call to another api and this api response a resterror response format, you can use this function to convert the response to RestErr  with response.Bytes()
 func NewRestErrorFromBytes(bytes []byte) (RestErr, error) {
 	var apiErr restErr
 	if err := json.Unmarshal(bytes, &apiErr); err != nil {
