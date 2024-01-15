@@ -2,16 +2,28 @@
 
 ## Description
 
-This package provides a custom validator for Go structs, with additional validations for Brazilian CPF and CNPJ numbers.  
-The error returned is formated as the [resterrors package](../resterrors/README.md)
+This package provides a custom validator for Go Structs, with additional validations:
+* 1 - tag `cpf`: Validate CPF number with brazilian rules
+* 2 - tag `cnpj`: Validate CNPJ number with brazilian rules
+* 3 - tag `required_trim`: Validate tag required after trim the string value. Only valid for strings   
+  
+It use the `go-playground/validator/v10` lib to do the validations.
 
 ## Types
 
 ### Validator interface
 
 The `Validator` interface defines a method for validating a struct.
-The exported functions are:  
-* `ValidateStruct(dataSet interface{}) error`
+- Exported custom functions:  
+    * `ValidateStruct(dataSet interface{}) error`
+        * this function with use the validator
+- Default functions exported from `go-playground/validator/v10`
+    - Var(field interface{}, tag string) error
+	- RegisterValidation(tag string, fn validator.Func) error
+	- RegisterAlias(alias string, tags string)
+	- StructExcept(current interface{}, fields ...string) error
+	- StructPartial(current interface{}, fields ...string) error
+	- StructFiltered(current interface{}, filter validator.FilterFunc) error
 
 ## Functions
 
@@ -21,7 +33,8 @@ The `NewValidator` function returns a new instance of the `Validator` interface.
 
 ### ValidateStruct
 
-The `ValidateStruct` method validates the given data set using the validator instance. It returns an error if the validation fails, with detailed error messages for each validation rule that was not satisfied. The error message includes information about the field name and the specific validation rule that failed.
+The `ValidateStruct` method validates the given data set using the validator instance. It returns an error if the validation fails, with detailed error messages for each validation rule that was not satisfied. The error message includes information about the field name and the specific validation rule that failed.  
+This function returns a error of type [resterrors.RestErr](../resterrors/README.md).
 
 ## Usage
 

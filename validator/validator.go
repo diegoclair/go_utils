@@ -19,6 +19,14 @@ type Validator interface {
 	// cnpj - validate if the input is a valid cnpj
 	// required_trim - validate the tag required after trim the input (only valid for string fields type)
 	ValidateStruct(dataSet interface{}) error
+
+	// Some default Methods from go-playground/validator/v10 package
+	Var(field interface{}, tag string) error
+	RegisterValidation(tag string, fn validator.Func) error
+	RegisterAlias(alias string, tags string)
+	StructExcept(current interface{}, fields ...string) error
+	StructPartial(current interface{}, fields ...string) error
+	StructFiltered(current interface{}, filter validator.FilterFunc) error
 }
 
 type validatorImpl struct {
@@ -141,4 +149,28 @@ func (v *validatorImpl) registerCustomValidations() error {
 	}
 
 	return nil
+}
+
+func (v *validatorImpl) Var(field interface{}, tag string) error {
+	return v.validator.Var(field, tag)
+}
+
+func (v *validatorImpl) RegisterValidation(tag string, fn validator.Func) error {
+	return v.validator.RegisterValidation(tag, fn)
+}
+
+func (v *validatorImpl) RegisterAlias(alias string, tags string) {
+	v.validator.RegisterAlias(alias, tags)
+}
+
+func (v *validatorImpl) StructExcept(current interface{}, fields ...string) error {
+	return v.validator.StructExcept(current, fields...)
+}
+
+func (v *validatorImpl) StructPartial(current interface{}, fields ...string) error {
+	return v.validator.StructPartial(current, fields...)
+}
+
+func (v *validatorImpl) StructFiltered(current interface{}, filter validator.FilterFunc) error {
+	return v.validator.StructFiltered(current, filter)
 }
