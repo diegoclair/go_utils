@@ -27,4 +27,4 @@ To use any of these packages, simply import them into your Go project.
 
 ## Contribution
 
-If you want to constribute, just open a PR and I'll validate it =]
+If you want to contribute, just open a PR and I'll validate it =]
