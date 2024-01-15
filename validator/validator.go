@@ -2,6 +2,8 @@ package validator
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
 
 	"github.com/diegoclair/go_utils-lib/v2/resterrors"
 	"github.com/go-playground/validator/v10"
@@ -10,8 +12,12 @@ import (
 
 type Validator interface {
 	// ValidateStruct validates the given data set using the validator instance.
-	// It returns an error if the validation fails, with detailed error messages for each validation rule that was not satisfied.
-	// The error message includes information about the field name and the specific validation rule that failed.
+	// It use the go-playground/validator/v10 package to validate the data set and return a better error message for some tags.
+	// This function returns a error of type resterrors.RestErr.
+	// It contains 3 more custom tags:
+	// cpf - validate if the input is a valid cpf
+	// cnpj - validate if the input is a valid cnpj
+	// required_trim - validate the tag required after trim the input (only valid for string fields type)
 	ValidateStruct(dataSet interface{}) error
 }
 
@@ -19,35 +25,22 @@ type validatorImpl struct {
 	validator *validator.Validate
 }
 
-// NewValidator returns a new instance of validator interface with the custom validations:
-// cpf - validate if the input is a valid cpf
-// cnpj - validate if the input is a valid cnpj
+// NewValidator returns a new instance of validator interface with the custom validations tags validations.
 func NewValidator() (Validator, error) {
-	v := validator.New()
-
-	err := v.RegisterValidation("cpf", func(fl validator.FieldLevel) bool {
-		cpf := cpfcnpj.NewCPF(fl.Field().String())
-		return cpf.IsValid()
-	})
-	if err != nil {
-		return nil, resterrors.NewInternalServerError("Error trying to register cpf validation", err)
+	v := &validatorImpl{
+		// the option validator.WithRequiredStructEnabled() will be default on v11 of go-playground/validator
+		validator: validator.New(validator.WithRequiredStructEnabled()),
 	}
 
-	err = v.RegisterValidation("cnpj", func(fl validator.FieldLevel) bool {
-		cnpj := cpfcnpj.NewCNPJ(fl.Field().String())
-		return cnpj.IsValid()
-	})
+	err := v.registerCustomValidations()
 	if err != nil {
-		return nil, resterrors.NewInternalServerError("Error trying to register cnpj validation", err)
+		return nil, err
 	}
 
-	return &validatorImpl{
-		validator: v,
-	}, nil
+	return v, nil
 }
 
 func (v *validatorImpl) ValidateStruct(dataSet interface{}) error {
-
 	err := v.validator.Struct(dataSet)
 	if err != nil {
 
@@ -111,6 +104,40 @@ func (v *validatorImpl) ValidateStruct(dataSet interface{}) error {
 		}
 
 		return resterrors.NewUnprocessableEntity("Invalid input data", errMessage)
+	}
+
+	return nil
+}
+
+func (v *validatorImpl) registerCustomValidations() error {
+	err := v.validator.RegisterValidation("cpf", func(fl validator.FieldLevel) bool {
+		cpf := cpfcnpj.NewCPF(fl.Field().String())
+		return cpf.IsValid()
+	})
+	if err != nil {
+		return resterrors.NewInternalServerError("Error trying to register cpf validation", err)
+	}
+
+	err = v.validator.RegisterValidation("cnpj", func(fl validator.FieldLevel) bool {
+		cnpj := cpfcnpj.NewCNPJ(fl.Field().String())
+		return cnpj.IsValid()
+	})
+	if err != nil {
+		return resterrors.NewInternalServerError("Error trying to register cnpj validation", err)
+	}
+
+	err = v.validator.RegisterValidation("required_trim", func(fl validator.FieldLevel) bool {
+		if fl.Field().Kind() != reflect.String {
+			return false
+		}
+
+		trimmedValue := strings.TrimSpace(fl.Field().String())
+
+		err = v.validator.Var(trimmedValue, "required")
+		return err == nil
+	})
+	if err != nil {
+		return resterrors.NewInternalServerError("Error trying to register required_trim validation", err)
 	}
 
 	return nil
