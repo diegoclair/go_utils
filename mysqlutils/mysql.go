@@ -2,6 +2,7 @@ package mysqlutils
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/diegoclair/go_utils-lib/v2/resterrors"
@@ -9,9 +10,31 @@ import (
 )
 
 const (
-	errorNoRows       = "no rows in result set"
+	errNoRows         = "no rows in result set"
 	duplicatedKeyCode = 1062
+
+	errNoRecordsFind = "No records find"
 )
+
+var (
+	// noSQLRowsRE - to check if sql error is because that there are no rows
+	noSQLRowsRE = regexp.MustCompile(errNoRows)
+	// noRecordsFindRE - to check if sql error is because that there are no records find with the parameters
+	noRecordsFindRE = regexp.MustCompile(errNoRecordsFind)
+)
+
+// SQLNotFound - Check if the error is because there are no sql rows or
+// no records find with given parameters
+func SQLNotFound(err string) bool {
+	noRowsIdx := noSQLRowsRE.FindStringIndex(err)
+	if len(noRowsIdx) > 0 {
+		return true
+	}
+
+	noRecordsIdx := noRecordsFindRE.FindStringIndex(err)
+
+	return len(noRecordsIdx) > 0
+}
 
 // HandleMySQLError - handle mysql errors
 func HandleMySQLError(err error) resterrors.RestErr {
@@ -19,7 +42,7 @@ func HandleMySQLError(err error) resterrors.RestErr {
 	//if exists the error on mysql.MySQLError
 	sqlErr, exists := err.(*mysql.MySQLError)
 	if !exists {
-		if strings.Contains(err.Error(), errorNoRows) {
+		if strings.Contains(err.Error(), errNoRows) {
 			return resterrors.NewNotFoundError("No records find with the parameters")
 		}
 		return resterrors.NewInternalServerError("Error database response", err.Error())
