@@ -23,8 +23,8 @@ var (
 	noRecordsFindRE = regexp.MustCompile(errNoRecordsFind)
 )
 
-// SQLNotFound - Check if the error is because there are no sql rows or
-// no records find with given parameters
+// SQLNotFound checks if the given error message indicates that no SQL rows or records were found.
+// It returns true if no rows or records were found, otherwise false.
 func SQLNotFound(err string) bool {
 	noRowsIdx := noSQLRowsRE.FindStringIndex(err)
 	if len(noRowsIdx) > 0 {
@@ -36,7 +36,16 @@ func SQLNotFound(err string) bool {
 	return len(noRecordsIdx) > 0
 }
 
-// HandleMySQLError - handle mysql errors
+// HandleMySQLError handles the MySQL errors and returns a corresponding REST error.
+// It takes an error as input and checks if it is a MySQL error. If it is not a MySQL error,
+// it checks if the error message contains a specific string indicating a "no rows" error.
+// If it does, it returns a NotFoundError with a custom message. Otherwise, it returns an
+// InternalServerError with the error message.
+// If the error is a MySQL error, it checks the error number and handles specific cases.
+// For example, if the error number indicates a duplicated key error, it extracts the
+// duplicated key and value from the error message and returns a ConflictError with a
+// custom message. If none of the specific cases match, it returns an InternalServerError
+// with the error message.
 func HandleMySQLError(err error) resterrors.RestErr {
 
 	//if exists the error on mysql.MySQLError
