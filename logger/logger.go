@@ -5,11 +5,6 @@ import (
 	"log/slog"
 )
 
-const (
-	AccountUUIDKey = "account_uuid"
-	ErrorKey       = "error"
-)
-
 type LogParams struct {
 	// AppName is the name of your application, that will be used as a field in the log
 	AppName string
