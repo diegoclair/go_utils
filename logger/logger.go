@@ -14,9 +14,9 @@ type LogParams struct {
 	SlogOptions slog.HandlerOptions
 
 	// AddAttributesFromContext is a function that will be called to add attributes to the log.
-	// it should return a key and a value, example: []any{AccountUUIDKey, ctx.Value(AccountUUIDKey)}
+	// it should return a key and a value, example: []any{"account_id", ctx.Value(AccountUUIDKey)}
 	// example: when you call logger.Info(ctx, "message"), the logger will add the attributes returned by the function
-	// it will look like this: {"time":"2020-01-01T00:00:00","level":"INFO","file":"main.go:10","msg":"main: message","account_uuid":"1234567890"}
+	// it will look like this: {"time":"2020-01-01T00:00:00","level":"INFO","file":"main.go:10","msg":"main: message","account_id":"1234567890"}
 	AddAttributesFromContext func(ctx context.Context) []any
 }
 
