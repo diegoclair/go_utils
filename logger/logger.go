@@ -20,6 +20,11 @@ type LogParams struct {
 	AddAttributesFromContext func(ctx context.Context) []any
 }
 
+// LogParams is the struct that contains the parameters to create a logger
+func New(params LogParams) Logger {
+	return newSlogLogger(params)
+}
+
 // Logger is a wrapper of the slog library adding some extra functionality
 type Logger interface {
 	// Info are the same methods as the slog library
@@ -58,7 +63,7 @@ type Logger interface {
 	Printf(msg string, v ...any)
 }
 
-// LogParams is the struct that contains the parameters to create a logger
-func New(params LogParams) Logger {
-	return newSlogLogger(params)
+// Err is a helper function to add an error to the log as key and value
+func Err(err error) slog.Attr {
+	return slog.String("error", err.Error())
 }
