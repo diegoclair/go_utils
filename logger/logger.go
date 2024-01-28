@@ -11,7 +11,7 @@ type LogParams struct {
 	// DebugLevel is the level of the log, if true, the log will be in debug level
 	DebugLevel bool
 	// SlogOptions is the options of the slog library
-	SlogOptions slog.HandlerOptions
+	slogOptions slog.HandlerOptions
 
 	// AddAttributesFromContext is a function that will be called to add attributes to the log.
 	// it should return a key and a value, example: []any{"account_id", ctx.Value(AccountUUIDKey)}

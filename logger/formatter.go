@@ -30,7 +30,7 @@ func newCustomJSONFormatter(w io.Writer, params LogParams) *customJSONFormatter 
 	}
 
 	res := &customJSONFormatter{
-		Handler:   slog.NewJSONHandler(w, &params.SlogOptions),
+		Handler:   slog.NewJSONHandler(w, &params.slogOptions),
 		w:         w,
 		logToFile: false,
 	}

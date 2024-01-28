@@ -24,10 +24,9 @@ type SlogLogger struct {
 
 func newSlogLogger(params LogParams) *SlogLogger {
 	logger := &SlogLogger{params: params}
-	opts := slog.HandlerOptions{}
 
 	if params.DebugLevel {
-		opts.Level = slog.LevelDebug
+		params.slogOptions.Level = slog.LevelDebug
 	}
 
 	logger.Logger = slog.New(newCustomJSONFormatter(os.Stdout, params))
