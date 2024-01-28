@@ -4,6 +4,13 @@
 
 This package provides a collection of utility packages that assist with basic tasks in Go.
 
+## Installation
+
+To use any of the following packages, run:
+```bash
+go get github.com/diegoclair/go_utils-lib
+```
+
 ## Packages
 
 ### resterrors Package
@@ -21,9 +28,9 @@ This package provides functions for handling and formatting dates and times. For
 ### validator Package
 This package provides a custom validator for Go structs, with additional validations for Brazilian CPF and CNPJ numbers. For more details, refer to the [validator README](./validator/README.md).
 
-## Usage
+### logger 
+This package provides a logging wrapper for the slog package with some extra functionality
 
-To use any of these packages, simply import them into your Go project.
 
 ## Contribution
 
