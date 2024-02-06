@@ -1,4 +1,4 @@
-# go_utils-lib Package
+# go_utils Package
 
 ## Description
 
@@ -8,7 +8,7 @@ This package provides a collection of utility packages that assist with basic ta
 
 To use any of the following packages, run:
 ```bash
-go get github.com/diegoclair/go_utils-lib/v2
+go install github.com/diegoclair/go_utils@latest
 ```
 
 ## Packages
