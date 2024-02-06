@@ -4,13 +4,6 @@
 
 This package provides a collection of utility packages that assist with basic tasks in Go.
 
-## Installation
-
-To use any of the following packages, run:
-```bash
-go install github.com/diegoclair/go_utils@v2
-```
-
 ## Packages
 
 ### resterrors Package
