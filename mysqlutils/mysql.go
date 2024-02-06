@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/diegoclair/go_utils/v2/resterrors"
+	"github.com/diegoclair/go_utils/resterrors"
 	"github.com/go-sql-driver/mysql"
 )
 

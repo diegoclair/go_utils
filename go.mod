@@ -1,4 +1,4 @@
-module github.com/diegoclair/go_utils/v2
+module github.com/diegoclair/go_utils
 
 go 1.21.6
 

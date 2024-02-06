@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/diegoclair/go_utils/v2/resterrors"
+	"github.com/diegoclair/go_utils/resterrors"
 	"github.com/go-playground/validator/v10"
 	"github.com/klassmann/cpfcnpj"
 )
