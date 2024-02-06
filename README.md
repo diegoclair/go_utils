@@ -1,5 +1,9 @@
 # go_utils Package
 
+![ci workflow](https://github.com/diegoclair/go_utils/actions/workflows/ci.yaml/badge.svg)
+![GitHub tag](https://img.shields.io/github/tag/diegoclair/go_utils.svg)
+
+
 ## Description
 
 This package provides a collection of utility packages that assist with basic tasks in Go.
