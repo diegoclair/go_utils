@@ -8,7 +8,7 @@ This package provides a collection of utility packages that assist with basic ta
 
 To use any of the following packages, run:
 ```bash
-go install github.com/diegoclair/go_utils@latest
+go install github.com/diegoclair/go_utils@v2
 ```
 
 ## Packages
