@@ -23,6 +23,12 @@ type SlogLogger struct {
 }
 
 func newSlogLogger(params LogParams) *SlogLogger {
+	if params.AddAttributesFromContext == nil {
+		params.AddAttributesFromContext = func(ctx context.Context) []any {
+			return nil
+		}
+	}
+
 	logger := &SlogLogger{params: params}
 
 	if params.DebugLevel {
