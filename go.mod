@@ -5,6 +5,7 @@ go 1.21.6
 require (
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/go-sql-driver/mysql v1.7.1
+	github.com/golang/mock v1.6.0
 	github.com/gookit/color v1.5.4
 	github.com/klassmann/cpfcnpj v0.0.0-20200907140233-a595c5fd8de1
 	github.com/labstack/gommon v0.4.2
