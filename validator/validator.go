@@ -14,10 +14,11 @@ type Validator interface {
 	// ValidateStruct validates the given data set using the validator instance.
 	// It use the go-playground/validator/v10 package to validate the data set and return a better error message for some tags.
 	// This function returns a error of type resterrors.RestErr.
-	// It contains 3 more custom tags:
+	// It contains 4 more custom tags:
 	// cpf - validate if the input is a valid cpf
 	// cnpj - validate if the input is a valid cnpj
 	// required_trim - validate the tag required after trim the input (only valid for string fields type)
+	// gender - validate if the input is a valid gender (male or female)
 	ValidateStruct(dataSet interface{}) error
 
 	// Some default Methods from go-playground/validator/v10 package
@@ -64,7 +65,7 @@ func (v *validatorImpl) ValidateStruct(dataSet interface{}) error {
 			name := err.StructField()
 
 			switch err.Tag() {
-			case "required":
+			case "required", "required_trim":
 				errMessage = append(errMessage, fmt.Sprintf("The field '%s' is required", name))
 
 			case "email":
@@ -106,6 +107,9 @@ func (v *validatorImpl) ValidateStruct(dataSet interface{}) error {
 			case "cnpj":
 				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should be a valid cnpj", name))
 
+			case "gender":
+				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should be a valid gender", name))
+
 			default:
 				errMessage = append(errMessage, fmt.Sprintf("The field '%s' is invalid.", name))
 			}
@@ -146,6 +150,21 @@ func (v *validatorImpl) registerCustomValidations() error {
 	})
 	if err != nil {
 		return resterrors.NewInternalServerError("Error trying to register required_trim validation", err)
+	}
+
+	err = v.validator.RegisterValidation("gender", func(fl validator.FieldLevel) bool {
+		if fl.Field().Kind() != reflect.String {
+			return false
+		}
+
+		if strings.EqualFold(fl.Field().String(), "male") || strings.EqualFold(fl.Field().String(), "female") {
+			return true
+		}
+
+		return false
+	})
+	if err != nil {
+		return resterrors.NewInternalServerError("Error trying to register gender validation", err)
 	}
 
 	return nil
