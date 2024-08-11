@@ -1,6 +1,6 @@
 module github.com/diegoclair/go_utils
 
-go 1.22.3
+go 1.22.4
 
 require (
 	github.com/go-playground/validator/v10 v10.17.0
