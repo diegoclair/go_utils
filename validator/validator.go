@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -19,7 +20,7 @@ type Validator interface {
 	// cnpj - validate if the input is a valid cnpj
 	// required_trim - validate the tag required after trim the input (only valid for string fields type)
 	// gender - validate if the input is a valid gender (male or female)
-	ValidateStruct(dataSet interface{}) error
+	ValidateStruct(ctx context.Context, dataSet interface{}) error
 
 	// Some default Methods from go-playground/validator/v10 package
 	Var(field interface{}, tag string) error
@@ -49,10 +50,9 @@ func NewValidator() (Validator, error) {
 	return v, nil
 }
 
-func (v *validatorImpl) ValidateStruct(dataSet interface{}) error {
-	err := v.validator.Struct(dataSet)
+func (v *validatorImpl) ValidateStruct(ctx context.Context, dataSet interface{}) error {
+	err := v.validator.StructCtx(ctx, dataSet)
 	if err != nil {
-
 		invalidArgument, ok := err.(*validator.InvalidValidationError)
 		if ok {
 			return resterrors.NewInternalServerError("Invalid argument passed to struct: "+fmt.Sprint(invalidArgument), err)
