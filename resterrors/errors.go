@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/diegoclair/goswag/models"
 )
 
 // RestErr interface
@@ -38,13 +40,42 @@ func (e restErr) Causes() interface{} {
 	return e.ErrCauses
 }
 
-// NewRestError returns a instace of type restErr
+// NewRestError returns a instance of type restErr
 func NewRestError(message string, status int, err string, causes ...interface{}) RestErr {
 	return restErr{
 		ErrMessage:    message,
 		ErrStatusCode: status,
 		ErrError:      err,
 		ErrCauses:     causes,
+	}
+}
+
+func GoSwagDefaultResponseErrors() []models.ReturnType {
+	return []models.ReturnType{
+		{
+			StatusCode: http.StatusBadRequest,
+			Body:       restErr{},
+		},
+		{
+			StatusCode: http.StatusNotFound,
+			Body:       restErr{},
+		},
+		{
+			StatusCode: http.StatusInternalServerError,
+			Body:       restErr{},
+		},
+		{
+			StatusCode: http.StatusUnauthorized,
+			Body:       restErr{},
+		},
+		{
+			StatusCode: http.StatusUnprocessableEntity,
+			Body:       restErr{},
+		},
+		{
+			StatusCode: http.StatusConflict,
+			Body:       restErr{},
+		},
 	}
 }
 
