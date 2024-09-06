@@ -9,12 +9,16 @@ import (
 )
 
 const (
-	LevelFatal     = "FATAL"
-	LevelFatalCode = 60
+	// high numbers to avoid conflict with slog levels
+	LevelFatal        = "FATAL"
+	LevelFatalCode    = 60
+	LevelCritical     = "CRITICAL"
+	LevelCriticalCode = 61
 )
 
 var CustomLevels = map[int]string{
-	LevelFatalCode: LevelFatal, //high number to avoid conflict with slog levels
+	LevelFatalCode:    LevelFatal,
+	LevelCriticalCode: LevelCritical,
 }
 
 type SlogLogger struct {
@@ -101,6 +105,18 @@ func (l *SlogLogger) Fatalf(ctx context.Context, msg string, args ...any) {
 func (l *SlogLogger) Fatalw(ctx context.Context, msg string, keyAndValues ...any) {
 	l.Logger.Log(ctx, LevelFatalCode, msg, append(l.params.AddAttributesFromContext(ctx), keyAndValues...)...)
 	os.Exit(1)
+}
+
+func (l *SlogLogger) Critical(ctx context.Context, msg string) {
+	l.Logger.Log(ctx, LevelCriticalCode, msg, l.params.AddAttributesFromContext(ctx)...)
+}
+
+func (l *SlogLogger) Criticalf(ctx context.Context, msg string, args ...any) {
+	l.Logger.Log(ctx, LevelCriticalCode, fmt.Sprintf(msg, args...), l.params.AddAttributesFromContext(ctx)...)
+}
+
+func (l *SlogLogger) Criticalw(ctx context.Context, msg string, keyAndValues ...any) {
+	l.Logger.Log(ctx, LevelCriticalCode, msg, append(l.params.AddAttributesFromContext(ctx), keyAndValues...)...)
 }
 
 func (l *SlogLogger) Print(args ...any) {

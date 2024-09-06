@@ -48,7 +48,6 @@ func newCustomJSONFormatter(w io.Writer, params LogParams) *customJSONFormatter 
 }
 
 func (f *customJSONFormatter) Handle(ctx context.Context, r slog.Record) error {
-
 	funcName, fileName, fileLine := f.getRuntimeData()
 
 	level := f.getLevel(r.Level)
@@ -105,7 +104,7 @@ func (f *customJSONFormatter) applyLevelColor(fullMsg, level string) string {
 			levelColor = color.Yellow.Render(levelUpper)
 		case slog.LevelError.String():
 			levelColor = color.Red.Render(levelUpper)
-		case LevelFatal:
+		case LevelFatal, LevelCritical:
 			levelColor = color.Bold.Render(color.Red.Render(levelUpper))
 
 		default:

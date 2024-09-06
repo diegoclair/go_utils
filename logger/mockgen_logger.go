@@ -34,6 +34,52 @@ func (m *MockLogger) EXPECT() *MockLoggerMockRecorder {
 	return m.recorder
 }
 
+// Critical mocks base method.
+func (m *MockLogger) Critical(ctx context.Context, msg string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Critical", ctx, msg)
+}
+
+// Critical indicates an expected call of Critical.
+func (mr *MockLoggerMockRecorder) Critical(ctx, msg interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Critical", reflect.TypeOf((*MockLogger)(nil).Critical), ctx, msg)
+}
+
+// Criticalf mocks base method.
+func (m *MockLogger) Criticalf(ctx context.Context, msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Criticalf", varargs...)
+}
+
+// Criticalf indicates an expected call of Criticalf.
+func (mr *MockLoggerMockRecorder) Criticalf(ctx, msg interface{}, args ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Criticalf", reflect.TypeOf((*MockLogger)(nil).Criticalf), varargs...)
+}
+
+// Criticalw mocks base method.
+func (m *MockLogger) Criticalw(ctx context.Context, msg string, keyAndValues ...any) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, msg}
+	for _, a := range keyAndValues {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Criticalw", varargs...)
+}
+
+// Criticalw indicates an expected call of Criticalw.
+func (mr *MockLoggerMockRecorder) Criticalw(ctx, msg interface{}, keyAndValues ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, msg}, keyAndValues...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Criticalw", reflect.TypeOf((*MockLogger)(nil).Criticalw), varargs...)
+}
+
 // Debug mocks base method.
 func (m *MockLogger) Debug(ctx context.Context, msg string) {
 	m.ctrl.T.Helper()

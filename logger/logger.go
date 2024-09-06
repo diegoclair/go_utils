@@ -27,36 +27,42 @@ func New(params LogParams) Logger {
 
 // Logger is a wrapper of the slog library adding some extra functionality
 type Logger interface {
-	// Info are the same methods as the slog library
+	// Info logs a message with INFO level
 	Info(ctx context.Context, msg string)
-	// Infof add the functionality of formatting the message, like fmt.Printf
+	// Infof logs a message with INFO level and format the message, like fmt.Printf
 	Infof(ctx context.Context, msg string, args ...any)
-	// Infow add the functionality of adding key and values to the log, example: logger.Infow(ctx, "message", "key", "value")
+	// Infow logs a message with INFO level and add key and values to the log, example: logger.Infow(ctx, "message", "key", "value")
 	Infow(ctx context.Context, msg string, keyAndValues ...any)
-	// Debug are the same methods as the slog library
+	// Debug logs a message with DEBUG level
 	Debug(ctx context.Context, msg string)
-	// Debugf add the functionality of formatting the message, like fmt.Printf
+	// Debugf logs a message with DEBUG level and format the message, like fmt.Printf
 	Debugf(ctx context.Context, msg string, args ...any)
-	// Debugw add the functionality of adding key and values to the log, example: logger.Debugw(ctx, "message", "key", "value")
+	// Debugw logs a message with DEBUG level and add key and values to the log, example: logger.Debugw(ctx, "message", "key", "value")
 	Debugw(ctx context.Context, msg string, keyAndValues ...any)
-	// Warn are the same methods as the slog library
+	// Warn logs a message with WARN level
 	Warn(ctx context.Context, msg string)
-	// Warnf add the functionality of formatting the message, like fmt.Printf
+	// Warnf logs a message with WARN level and format the message, like fmt.Printf
 	Warnf(ctx context.Context, msg string, args ...any)
-	// Warnw add the functionality of adding key and values to the log, example: logger.Warnw(ctx, "message", "key", "value")
+	// Warnw logs a message with WARN level and add key and values to the log, example: logger.Warnw(ctx, "message", "key", "value")
 	Warnw(ctx context.Context, msg string, keyAndValues ...any)
-	// Error are the same methods as the slog library
+	// Error logs a message with ERROR level
 	Error(ctx context.Context, msg string)
-	// Errorf add the functionality of formatting the message, like fmt.Printf
+	// Errorf logs a message with ERROR level and format the message, like fmt.Printf
 	Errorf(ctx context.Context, msg string, args ...any)
-	// Errorw add the functionality of adding key and values to the log, example: logger.Errorw(ctx, "message", "key", "value")
+	// Errorw logs a message with ERROR level and add key and values to the log, example: logger.Errorw(ctx, "message", "key", "value")
 	Errorw(ctx context.Context, msg string, keyAndValues ...any)
-	// Fatal are the same methods as the slog library
+	// Fatal logs a message with FATAL level and exit the application
 	Fatal(ctx context.Context, msg string)
-	// Fatalw add the functionality of adding key and values to the log, example: logger.Fatalw(ctx, "message", "key", "value")
+	// Fatalf logs a message with FATAL level and format the message, like fmt.Printf and exit the application
 	Fatalf(ctx context.Context, msg string, args ...any)
-	// Fatalw add the functionality of adding key and values to the log, example: logger.Fatalw(ctx, "message", "key", "value")
+	// Fatalw logs a message with FATAL level and add key and values to the log, example: logger.Fatalw(ctx, "message", "key", "value") and exit the application
 	Fatalw(ctx context.Context, msg string, keyAndValues ...any)
+	// Critical logs a message with CRITICAL level
+	Critical(ctx context.Context, msg string)
+	// Criticalf logs a message with CRITICAL level and format the message, like fmt.Printf
+	Criticalf(ctx context.Context, msg string, args ...any)
+	// Criticalw logs a message with CRITICAL level and add key and values to the log, example: logger.Criticalw(ctx, "message", "key", "value")
+	Criticalw(ctx context.Context, msg string, keyAndValues ...any)
 	// Print implements the SetLog function on mysql library
 	Print(args ...any)
 	// Printf implements the SetLog function on elasticsearch library
