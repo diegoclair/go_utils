@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package resterrors;
+
+option go_package = "resterrors/internal/pb";
+
+message RestError {
+    string message = 1;
+    int32 status_code = 2;
+    string error = 3;
+    bytes causes = 4;
+}

@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/diegoclair/go_utils/resterrors/internal/pb"
 	"github.com/diegoclair/goswag/models"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // RestErr interface
@@ -14,14 +17,15 @@ type RestErr interface {
 	Message() string
 	StatusCode() int
 	Error() string
+	GetError() string
 	Causes() interface{}
 }
 
 type restErr struct {
-	ErrMessage    string      `json:"message"`
-	ErrStatusCode int         `json:"status_code"`
-	ErrError      string      `json:"error"`
-	ErrCauses     interface{} `json:"causes"`
+	ErrMessage    string `json:"message"`
+	ErrStatusCode int    `json:"status_code"`
+	ErrError      string `json:"error"`
+	ErrCauses     any    `json:"causes"`
 }
 
 func (e restErr) Message() string {
@@ -32,11 +36,15 @@ func (e restErr) StatusCode() int {
 	return e.ErrStatusCode
 }
 
+func (e restErr) GetError() string {
+	return e.ErrError
+}
+
 func (e restErr) Error() string {
 	return fmt.Sprintf("message: %s - statusCode: %d - error: %s - causes: %v", e.ErrMessage, e.ErrStatusCode, e.ErrError, e.ErrCauses)
 }
 
-func (e restErr) Causes() interface{} {
+func (e restErr) Causes() any {
 	return e.ErrCauses
 }
 
@@ -50,6 +58,7 @@ func NewRestError(message string, status int, err string, causes ...interface{})
 	}
 }
 
+// GoSwagDefaultResponseErrors returns the default response errors for the GoSwag library
 func GoSwagDefaultResponseErrors() []models.ReturnType {
 	return []models.ReturnType{
 		{
@@ -150,4 +159,87 @@ func NewConflictError(message string, causes ...interface{}) RestErr {
 	}
 
 	return result
+}
+
+// ToPb convert a RestErr to a gRPC error if the error is a RestErr
+// It returns the original error if the error is not a RestErr
+func ToPb(err error) (res error) {
+	if err == nil {
+		return nil
+	}
+
+	restErr, ok := err.(restErr)
+	if !ok {
+		return err
+	}
+
+	causes, jsonErr := json.Marshal(restErr.Causes())
+	if jsonErr != nil {
+		return err
+	}
+
+	pbErr := &pb.RestError{
+		Message:    restErr.Message(),
+		StatusCode: int32(restErr.StatusCode()),
+		Error:      restErr.GetError(),
+		Causes:     causes,
+	}
+
+	st := status.New(codes.Code(restErr.StatusCode()), restErr.Message())
+	st, stErr := st.WithDetails(pbErr)
+	if stErr != nil {
+		return err
+	}
+
+	return st.Err()
+}
+
+// FromError try to convert an error to RestError
+// It supports errors from grpc (protoRestError) and resterrors
+// If the error is not a RestError, it returns the original error
+func FromError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	st, stOk := status.FromError(err)
+
+	restErr, restErrOk := err.(restErr)
+
+	if !stOk && !restErrOk {
+		return err
+	}
+
+	if stOk {
+		if len(st.Details()) > 0 {
+			return fromPb(st.Details()[0].(*pb.RestError))
+		}
+		return err
+	}
+
+	return fromRestErr(restErr)
+}
+
+func fromPb(pbErr *pb.RestError) error {
+	var causes any
+	err := json.Unmarshal(pbErr.GetCauses(), &causes)
+	if err != nil {
+		return err
+	}
+
+	return &restErr{
+		ErrMessage:    pbErr.GetMessage(),
+		ErrStatusCode: int(pbErr.GetStatusCode()),
+		ErrError:      pbErr.GetError(),
+		ErrCauses:     causes,
+	}
+}
+
+func fromRestErr(err restErr) error {
+	return &restErr{
+		ErrMessage:    err.Message(),
+		ErrStatusCode: err.StatusCode(),
+		ErrError:      err.GetError(),
+		ErrCauses:     err.Causes(),
+	}
 }
