@@ -19,7 +19,6 @@ type Validator interface {
 	// cpf - validate if the input is a valid cpf
 	// cnpj - validate if the input is a valid cnpj
 	// required_trim - validate the tag required after trim the input (only valid for string fields type)
-	// gender - validate if the input is a valid gender (male or female)
 	ValidateStruct(ctx context.Context, dataSet interface{}) error
 
 	// Some default Methods from go-playground/validator/v10 package
@@ -107,9 +106,6 @@ func (v *validatorImpl) ValidateStruct(ctx context.Context, dataSet interface{})
 			case "cnpj":
 				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should be a valid cnpj", name))
 
-			case "gender":
-				errMessage = append(errMessage, fmt.Sprintf("The field '%s' should be a valid gender", name))
-
 			default:
 				errMessage = append(errMessage, fmt.Sprintf("The field '%s' is invalid.", name))
 			}
@@ -150,21 +146,6 @@ func (v *validatorImpl) registerCustomValidations() error {
 	})
 	if err != nil {
 		return resterrors.NewInternalServerError("Error trying to register required_trim validation", err)
-	}
-
-	err = v.validator.RegisterValidation("gender", func(fl validator.FieldLevel) bool {
-		if fl.Field().Kind() != reflect.String {
-			return false
-		}
-
-		if strings.EqualFold(fl.Field().String(), "male") || strings.EqualFold(fl.Field().String(), "female") {
-			return true
-		}
-
-		return false
-	})
-	if err != nil {
-		return resterrors.NewInternalServerError("Error trying to register gender validation", err)
 	}
 
 	return nil
