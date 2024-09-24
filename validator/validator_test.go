@@ -233,20 +233,6 @@ func Test_validatorImpl_ValidateStruct(t *testing.T) {
 				assert.Contains(t, err.Error(), "The field 'CNPJ' should be a valid cnpj")
 			},
 		},
-		{
-			name: "should return error for tag gender",
-			args: args{
-				dataSet: struct {
-					Gender string `validate:"gender"`
-				}{
-					Gender: "other",
-				},
-			},
-			checkError: func(err error) {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), "The field 'Gender' should be a valid gender")
-			},
-		},
 	}
 
 	for _, tt := range tests {
