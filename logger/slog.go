@@ -9,9 +9,8 @@ import (
 )
 
 type SlogLogger struct {
-	params          LogParams
-	logger          zerolog.Logger
-	customFormatter *customJSONFormatter
+	params    LogParams
+	formatter *customJSONFormatter
 }
 
 func newSlogLogger(params LogParams) *SlogLogger {
@@ -22,7 +21,6 @@ func newSlogLogger(params LogParams) *SlogLogger {
 	}
 
 	formatter := newCustomJSONFormatter(os.Stdout, params)
-	logger := zerolog.New(formatter).With().Timestamp().Logger()
 
 	if params.DebugLevel {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -31,20 +29,14 @@ func newSlogLogger(params LogParams) *SlogLogger {
 	}
 
 	return &SlogLogger{
-		params:          params,
-		logger:          logger,
-		customFormatter: formatter,
+		params:    params,
+		formatter: formatter,
 	}
 }
 
-func (l *SlogLogger) Close() {
-	close(l.customFormatter.done)
-}
-
 func (l *SlogLogger) log(ctx context.Context, level zerolog.Level, msg string, fields ...any) {
-	attributes := make(map[string]any)
+	attributes := make(map[string]interface{})
 
-	// add attributes from context
 	if l.params.AddAttributesFromContext != nil {
 		attrs := l.params.AddAttributesFromContext(ctx)
 		for i := 0; i < len(attrs); i += 2 {
@@ -57,7 +49,6 @@ func (l *SlogLogger) log(ctx context.Context, level zerolog.Level, msg string, f
 		}
 	}
 
-	// add additional fields
 	for i := 0; i < len(fields); i += 2 {
 		if i+1 < len(fields) {
 			key, ok := fields[i].(string)
@@ -67,8 +58,8 @@ func (l *SlogLogger) log(ctx context.Context, level zerolog.Level, msg string, f
 		}
 	}
 
-	// send formatted log to channel
-	l.customFormatter.logChan <- l.customFormatter.formatLog(msg, level, attributes)
+	formattedLog := l.formatter.formatLog(msg, level, attributes)
+	l.formatter.Write([]byte(formattedLog))
 }
 
 func (l *SlogLogger) Info(ctx context.Context, msg string) {

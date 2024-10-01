@@ -7,19 +7,17 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
+	"time"
 
 	"github.com/gookit/color"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog"
 )
 
+// customJSONFormatter implementa a interface io.Writer
 type customJSONFormatter struct {
 	w         io.Writer
 	logToFile bool
 	attr      []any
-	logChan   chan string
-	done      chan struct{}
 }
 
 func newCustomJSONFormatter(w io.Writer, params LogParams) *customJSONFormatter {
@@ -30,9 +28,7 @@ func newCustomJSONFormatter(w io.Writer, params LogParams) *customJSONFormatter 
 
 	res := &customJSONFormatter{
 		w:         w,
-		logToFile: false,
-		logChan:   make(chan string, 10000),
-		done:      make(chan struct{}),
+		logToFile: params.LogToFile,
 	}
 
 	if params.AppName != "" {
@@ -43,103 +39,47 @@ func newCustomJSONFormatter(w io.Writer, params LogParams) *customJSONFormatter 
 		res.attr = append(res.attr, "host", hostname)
 	}
 
-	go res.processLogs()
-
 	return res
 }
 
-var builderPool = sync.Pool{
-	New: func() any {
-		return new(strings.Builder)
-	},
-}
-
-func (f *customJSONFormatter) formatLog(msg string, level zerolog.Level, attributes map[string]any) string {
+func (f *customJSONFormatter) formatLog(msg string, level zerolog.Level, attributes map[string]interface{}) string {
 	funcName, fileName, fileLine := f.getRuntimeData()
 
-	buf := builderPool.Get().(*strings.Builder)
-	buf.Reset()
-	defer builderPool.Put(buf)
+	levelStr := strings.ToUpper(level.String())
+	if level == CustomLevels[LevelCritical] {
+		levelStr = LevelCritical
+	}
 
-	buf.WriteString(`{"time":"`)
-	buf.WriteString(zerolog.TimestampFunc().Format("2006-01-02T15:04:05"))
-	buf.WriteString(`","level":"`)
-	buf.WriteString(level.String())
-	buf.WriteString(`","file":"`)
-	buf.WriteString(fileName)
-	buf.WriteString(":")
-	buf.WriteString(fmt.Sprintf("%d", fileLine))
-	buf.WriteString(`","msg":"`)
-	buf.WriteString(funcName)
-	buf.WriteString(`: `)
-	buf.WriteString(msg)
-	buf.WriteString(`"`)
+	// Iniciar com os campos na ordem desejada
+	logEntry := fmt.Sprintf(`{"time":"%s","level":"%s","msg":"%s: %s","file":"%s:%d"`,
+		time.Now().Format(time.RFC3339),
+		levelStr,
+		funcName,
+		msg,
+		fileName,
+		fileLine,
+	)
 
-	// Adicionar atributos personalizados
+	for key, value := range attributes {
+		logEntry += fmt.Sprintf(`,"%s":%v`, key, formatValue(value))
+	}
+
 	for i := 0; i < len(f.attr); i += 2 {
 		if i+1 < len(f.attr) {
 			key, ok := f.attr[i].(string)
-			if !ok {
-				continue
+			if ok {
+				logEntry += fmt.Sprintf(`,"%s":%v`, key, formatValue(f.attr[i+1]))
 			}
-			value := f.attr[i+1]
-			buf.WriteString(`,"`)
-			buf.WriteString(key)
-			buf.WriteString(`":`)
-			buf.WriteString(formatJSONValue(value))
 		}
 	}
 
-	// Adicionar atributos adicionais
-	for key, value := range attributes {
-		buf.WriteString(`,"`)
-		buf.WriteString(key)
-		buf.WriteString(`":`)
-		buf.WriteString(formatJSONValue(value))
-	}
-
-	buf.WriteString("}")
-	return f.applyLevelColor(buf.String(), level.String())
+	logEntry += "}"
+	return logEntry
 }
 
-func (f *customJSONFormatter) processLogs() {
-	for {
-		select {
-		case logMsg := <-f.logChan:
-			_, err := fmt.Fprintln(f.w, logMsg)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error writing log: %v\n", err)
-			}
-		case <-f.done:
-			return
-		}
-	}
-}
-
-func (f *customJSONFormatter) applyLevelColor(fullMsg, level string) string {
-	if !f.logToFile {
-		levelUpper := strings.ToUpper(level)
-		levelColor := ""
-
-		switch level {
-		case zerolog.InfoLevel.String():
-			levelColor = color.Blue.Render(levelUpper)
-		case zerolog.DebugLevel.String():
-			levelColor = color.Magenta.Render(levelUpper)
-		case zerolog.WarnLevel.String():
-			levelColor = color.Yellow.Render(levelUpper)
-		case zerolog.ErrorLevel.String():
-			levelColor = color.Red.Render(levelUpper)
-		case LevelFatal, LevelCritical:
-			levelColor = color.Bold.Render(color.Red.Render(levelUpper))
-		default:
-			levelColor = levelUpper
-		}
-
-		return strings.Replace(fullMsg, `"level":"`+level+`"`, `"level":"`+levelColor+`"`, 1)
-	}
-
-	return fullMsg
+func (f *customJSONFormatter) Write(p []byte) (n int, err error) {
+	coloredJSON := f.applyLevelColor(string(p))
+	return f.w.Write(append([]byte(coloredJSON), '\n'))
 }
 
 func (f *customJSONFormatter) getRuntimeData() (funcName, filename string, line int) {
@@ -158,18 +98,37 @@ func (f *customJSONFormatter) getRuntimeData() (funcName, filename string, line 
 	return
 }
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
-
-func formatJSONValue(v any) string {
-	jsonBytes, err := json.Marshal(v)
-	if err != nil {
-		return fmt.Sprintf(`"%v"`, v)
-	}
-	return string(jsonBytes)
+var levelColors = map[string]string{
+	"DEBUG":    color.Magenta.Render("DEBUG"),
+	"INFO":     color.Blue.Render("INFO"),
+	"WARN":     color.Yellow.Render("WARN"),
+	"ERROR":    color.Red.Render("ERROR"),
+	"FATAL":    color.Bold.Render(color.Red.Render("FATAL")),
+	"CRITICAL": color.Bold.Render(color.Red.Render("CRITICAL")),
 }
 
-func (f *customJSONFormatter) Write(p []byte) (n int, err error) {
-	formattedLog := f.applyLevelColor(string(p), "")
-	f.logChan <- formattedLog
-	return len(p), nil
+func (f *customJSONFormatter) applyLevelColor(fullMsg string) string {
+	if f.logToFile {
+		return fullMsg
+	}
+
+	for level, colorLevel := range levelColors {
+		searchStr := fmt.Sprintf(`"level":"%s"`, level)
+		if strings.Contains(fullMsg, searchStr) {
+			return strings.Replace(fullMsg, searchStr, fmt.Sprintf(`"level":"%s"`, colorLevel), 1)
+		}
+	}
+
+	return fullMsg
+}
+
+func formatValue(v interface{}) string {
+	switch v := v.(type) {
+	case string:
+		return fmt.Sprintf(`"%s"`, v)
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, bool:
+		return fmt.Sprintf("%v", v)
+	default:
+		return fmt.Sprintf(`"%v"`, v)
+	}
 }

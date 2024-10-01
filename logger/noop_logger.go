@@ -28,4 +28,3 @@ func (l *NoopLogger) Criticalf(ctx context.Context, msg string, args ...any)    
 func (l *NoopLogger) Criticalw(ctx context.Context, msg string, keyAndValues ...any) {}
 func (l *NoopLogger) Print(args ...any)                                              {}
 func (l *NoopLogger) Printf(msg string, args ...any)                                 {}
-func (l *NoopLogger) Close()                                                         {}

@@ -17,6 +17,8 @@ type LogParams struct {
 	// example: when you call logger.Info(ctx, "message"), the logger will add the attributes returned by the function
 	// it will look like this: {"time":"2020-01-01T00:00:00","level":"INFO","file":"main.go:10","msg":"main: message","account_id":"1234567890"}
 	AddAttributesFromContext func(ctx context.Context) []any
+	// LogToFile is a flag to indicate if the log should be printed to file or not
+	LogToFile bool
 }
 
 // LogParams is the struct that contains the parameters to create a logger
@@ -66,8 +68,6 @@ type Logger interface {
 	Print(args ...any)
 	// Printf implements the SetLog function on elasticsearch library
 	Printf(msg string, v ...any)
-	// Close closes the logger, it will flush buffered logs and close log channel
-	Close()
 }
 
 // Err is a helper function to add an error to the log as key and value
