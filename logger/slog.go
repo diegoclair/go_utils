@@ -24,6 +24,7 @@ var CustomLevels = map[int]string{
 type SlogLogger struct {
 	params LogParams
 	*slog.Logger
+	customFormatter *customJSONFormatter
 }
 
 func newSlogLogger(params LogParams) *SlogLogger {
@@ -33,15 +34,20 @@ func newSlogLogger(params LogParams) *SlogLogger {
 		}
 	}
 
-	logger := &SlogLogger{params: params}
+	logger := &SlogLogger{params: params, customFormatter: newCustomJSONFormatter(os.Stdout, params)}
 
 	if params.DebugLevel {
 		params.slogOptions.Level = slog.LevelDebug
 	}
 
-	logger.Logger = slog.New(newCustomJSONFormatter(os.Stdout, params))
+	logger.Logger = slog.New(logger.customFormatter)
 
 	return logger
+}
+
+// Close closes the logger, it will flush buffered logs and close log channel
+func (l *SlogLogger) Close() {
+	close(l.customFormatter.done)
 }
 
 func (l *SlogLogger) Info(ctx context.Context, msg string) {

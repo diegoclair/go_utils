@@ -67,9 +67,11 @@ type Logger interface {
 	Print(args ...any)
 	// Printf implements the SetLog function on elasticsearch library
 	Printf(msg string, v ...any)
+	// Close closes the logger, it will flush buffered logs and close log channel
+	Close()
 }
 
 // Err is a helper function to add an error to the log as key and value
 func Err(err error) slog.Attr {
-	return slog.String("error", err.Error())
+	return slog.Any("error", err)
 }
