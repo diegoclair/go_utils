@@ -10,7 +10,7 @@ require (
 	github.com/gookit/color v1.5.4
 	github.com/json-iterator/go v1.1.12
 	github.com/klassmann/cpfcnpj v0.0.0-20200907140233-a595c5fd8de1
-	github.com/labstack/gommon v0.4.2
+	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/grpc v1.66.2
 	google.golang.org/protobuf v1.34.2
@@ -30,6 +30,7 @@ require (
 	github.com/goccy/go-json v0.10.3 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
 	github.com/labstack/echo/v4 v4.12.0 // indirect
+	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

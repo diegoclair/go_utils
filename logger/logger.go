@@ -2,17 +2,16 @@ package logger
 
 import (
 	"context"
-	"log/slog"
+
+	"github.com/rs/zerolog"
 )
 
+// LogParams is the struct that contains the parameters to create a logger
 type LogParams struct {
 	// AppName is the name of your application, that will be used as a field in the log
 	AppName string
 	// DebugLevel is the level of the log, if true, the log will be in debug level
 	DebugLevel bool
-	// SlogOptions is the options of the slog library
-	slogOptions slog.HandlerOptions
-
 	// AddAttributesFromContext is a function that will be called to add attributes to the log.
 	// it should return a key and a value, example: []any{"account_id", ctx.Value(AccountUUIDKey)}
 	// example: when you call logger.Info(ctx, "message"), the logger will add the attributes returned by the function
@@ -25,7 +24,7 @@ func New(params LogParams) Logger {
 	return newSlogLogger(params)
 }
 
-// Logger is a wrapper of the slog library adding some extra functionality
+// Logger is a wrapper of the zerolog library adding some extra functionality
 type Logger interface {
 	// Info logs a message with INFO level
 	Info(ctx context.Context, msg string)
@@ -72,6 +71,17 @@ type Logger interface {
 }
 
 // Err is a helper function to add an error to the log as key and value
-func Err(err error) slog.Attr {
-	return slog.Any("error", err)
+func Err(err error) []any {
+	return []any{"error", err}
+}
+
+const (
+	LevelFatal    = "FATAL"
+	LevelCritical = "CRITICAL"
+)
+
+// CustomLevels define os níveis de log personalizados
+var CustomLevels = map[string]zerolog.Level{
+	LevelFatal:    zerolog.FatalLevel,
+	LevelCritical: zerolog.FatalLevel + 1, // zerolog doesn't support custom levels directly, handle accordingly
 }
