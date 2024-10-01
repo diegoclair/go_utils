@@ -10,6 +10,7 @@ import (
 
 type SlogLogger struct {
 	params    LogParams
+	logger    zerolog.Logger
 	formatter *customJSONFormatter
 }
 
@@ -20,7 +21,10 @@ func newSlogLogger(params LogParams) *SlogLogger {
 		}
 	}
 
-	formatter := newCustomJSONFormatter(os.Stdout, params)
+	formatter := newCustomJSONFormatter(params)
+
+	// Initialize zerolog logger
+	logger := zerolog.New(formatter).With().Timestamp().Logger()
 
 	if params.DebugLevel {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -30,12 +34,13 @@ func newSlogLogger(params LogParams) *SlogLogger {
 
 	return &SlogLogger{
 		params:    params,
+		logger:    logger,
 		formatter: formatter,
 	}
 }
 
 func (l *SlogLogger) log(ctx context.Context, level zerolog.Level, msg string, fields ...any) {
-	attributes := make(map[string]interface{})
+	event := l.logger.WithLevel(level)
 
 	if l.params.AddAttributesFromContext != nil {
 		attrs := l.params.AddAttributesFromContext(ctx)
@@ -43,7 +48,7 @@ func (l *SlogLogger) log(ctx context.Context, level zerolog.Level, msg string, f
 			if i+1 < len(attrs) {
 				key, ok := attrs[i].(string)
 				if ok {
-					attributes[key] = attrs[i+1]
+					event = event.Interface(key, attrs[i+1])
 				}
 			}
 		}
@@ -53,13 +58,12 @@ func (l *SlogLogger) log(ctx context.Context, level zerolog.Level, msg string, f
 		if i+1 < len(fields) {
 			key, ok := fields[i].(string)
 			if ok {
-				attributes[key] = fields[i+1]
+				event = event.Interface(key, fields[i+1])
 			}
 		}
 	}
 
-	formattedLog := l.formatter.formatLog(msg, level, attributes)
-	l.formatter.Write([]byte(formattedLog))
+	event.Msg(msg)
 }
 
 func (l *SlogLogger) Info(ctx context.Context, msg string) {
@@ -125,16 +129,20 @@ func (l *SlogLogger) Fatalw(ctx context.Context, msg string, keyAndValues ...any
 	os.Exit(1)
 }
 
+const (
+	LevelCritical = zerolog.Level(60)
+)
+
 func (l *SlogLogger) Critical(ctx context.Context, msg string) {
-	l.log(ctx, CustomLevels[LevelCritical], msg)
+	l.log(ctx, LevelCritical, msg)
 }
 
 func (l *SlogLogger) Criticalf(ctx context.Context, msg string, args ...any) {
-	l.log(ctx, CustomLevels[LevelCritical], fmt.Sprintf(msg, args...))
+	l.log(ctx, LevelCritical, fmt.Sprintf(msg, args...))
 }
 
 func (l *SlogLogger) Criticalw(ctx context.Context, msg string, keyAndValues ...any) {
-	l.log(ctx, CustomLevels[LevelCritical], msg, keyAndValues...)
+	l.log(ctx, LevelCritical, msg, keyAndValues...)
 }
 
 func (l *SlogLogger) Print(args ...any) {

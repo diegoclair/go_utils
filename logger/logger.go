@@ -2,8 +2,6 @@ package logger
 
 import (
 	"context"
-
-	"github.com/rs/zerolog"
 )
 
 // LogParams is the struct that contains the parameters to create a logger
@@ -73,15 +71,4 @@ type Logger interface {
 // Err is a helper function to add an error to the log as key and value
 func Err(err error) []any {
 	return []any{"error", err}
-}
-
-const (
-	LevelFatal    = "FATAL"
-	LevelCritical = "CRITICAL"
-)
-
-// CustomLevels define os níveis de log personalizados
-var CustomLevels = map[string]zerolog.Level{
-	LevelFatal:    zerolog.FatalLevel,
-	LevelCritical: zerolog.FatalLevel + 1, // zerolog doesn't support custom levels directly, handle accordingly
 }

@@ -1,33 +1,31 @@
 package logger
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/gookit/color"
-	"github.com/rs/zerolog"
 )
 
-// customJSONFormatter implementa a interface io.Writer
 type customJSONFormatter struct {
 	w         io.Writer
 	logToFile bool
 	attr      []any
 }
 
-func newCustomJSONFormatter(w io.Writer, params LogParams) *customJSONFormatter {
+func newCustomJSONFormatter(params LogParams) *customJSONFormatter {
 	hostname, err := os.Hostname()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error obtaining host name: %v\n", err)
 	}
 
 	res := &customJSONFormatter{
-		w:         w,
+		w:         os.Stdout,
 		logToFile: params.LogToFile,
 	}
 
@@ -42,48 +40,117 @@ func newCustomJSONFormatter(w io.Writer, params LogParams) *customJSONFormatter 
 	return res
 }
 
-func (f *customJSONFormatter) formatLog(msg string, level zerolog.Level, attributes map[string]interface{}) string {
+type orderedEvent struct {
+	Time  string                 `json:"time,omitempty"`
+	Level string                 `json:"level,omitempty"`
+	Msg   string                 `json:"msg,omitempty"`
+	File  string                 `json:"file,omitempty"`
+	Extra map[string]interface{} `json:"-"`
+}
+
+func (oe orderedEvent) MarshalJSON() ([]byte, error) {
+	// Start with the fixed fields
+	result := fmt.Sprintf(`{"time":"%s","level":"%s","msg":"%s"`, oe.Time, oe.Level, oe.Msg)
+
+	if oe.File != "" {
+		result += fmt.Sprintf(`,"file":"%s"`, oe.File)
+	}
+
+	// Add extra fields
+	for k, v := range oe.Extra {
+		jsonValue, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		result += fmt.Sprintf(`,"%s":%s`, k, string(jsonValue))
+	}
+
+	result += "}"
+	return []byte(result), nil
+}
+
+func (f *customJSONFormatter) Write(p []byte) (n int, err error) {
+	var rawEvent map[string]interface{}
+	if err := json.Unmarshal(p, &rawEvent); err != nil {
+		return 0, err
+	}
+
 	funcName, fileName, fileLine := f.getRuntimeData()
 
-	levelStr := strings.ToUpper(level.String())
-	if level == CustomLevels[LevelCritical] {
-		levelStr = LevelCritical
+	event := orderedEvent{
+		Time:  getStringValue(rawEvent, "time"),
+		Level: strings.ToUpper(getStringValue(rawEvent, "level")),
+		Msg:   fmt.Sprintf("%s: %s", funcName, getStringValue(rawEvent, "message")),
+		File:  fmt.Sprintf("%s:%d", fileName, fileLine),
+		Extra: make(map[string]interface{}),
 	}
 
-	// Iniciar com os campos na ordem desejada
-	logEntry := fmt.Sprintf(`{"time":"%s","level":"%s","msg":"%s: %s","file":"%s:%d"`,
-		time.Now().Format(time.RFC3339),
-		levelStr,
-		funcName,
-		msg,
-		fileName,
-		fileLine,
-	)
-
-	for key, value := range attributes {
-		logEntry += fmt.Sprintf(`,"%s":%v`, key, formatValue(value))
+	if event.Level == "60" {
+		event.Level = "CRITICAL"
 	}
 
+	// Add custom attributes
 	for i := 0; i < len(f.attr); i += 2 {
 		if i+1 < len(f.attr) {
 			key, ok := f.attr[i].(string)
 			if ok {
-				logEntry += fmt.Sprintf(`,"%s":%v`, key, formatValue(f.attr[i+1]))
+				event.Extra[key] = f.attr[i+1]
 			}
 		}
 	}
 
-	logEntry += "}"
-	return logEntry
+	// Add remaining fields
+	for k, v := range rawEvent {
+		if k != "time" && k != "level" && k != "message" && k != "caller" {
+			event.Extra[k] = v
+		}
+	}
+
+	jsonData, err := json.Marshal(event)
+	if err != nil {
+		return 0, err
+	}
+
+	coloredJSON := f.applyLevelColor(string(jsonData))
+	return f.w.Write([]byte(coloredJSON + "\n"))
 }
 
-func (f *customJSONFormatter) Write(p []byte) (n int, err error) {
-	coloredJSON := f.applyLevelColor(string(p))
-	return f.w.Write(append([]byte(coloredJSON), '\n'))
+var levelColors = map[string]func(a ...interface{}) string{
+	"DEBUG":    color.Magenta.Render,
+	"INFO":     color.Blue.Render,
+	"WARN":     color.Yellow.Render,
+	"ERROR":    color.Red.Render,
+	"FATAL":    func(a ...interface{}) string { return color.Bold.Render(color.Red.Render(a...)) },
+	"CRITICAL": func(a ...interface{}) string { return color.Bold.Render(color.Red.Render(a...)) },
+}
+
+func (f *customJSONFormatter) applyLevelColor(fullMsg string) string {
+	if f.logToFile {
+		return fullMsg
+	}
+
+	for level, colorFunc := range levelColors {
+		searchStr := fmt.Sprintf(`"level":"%s"`, level)
+		if strings.Contains(fullMsg, searchStr) {
+			coloredLevel := colorFunc(level)
+			return strings.Replace(fullMsg, searchStr, fmt.Sprintf(`"level":"%s"`, coloredLevel), 1)
+		}
+	}
+	return fullMsg
+}
+
+// Helper function to safely get string values from the map
+func getStringValue(m map[string]interface{}, key string) string {
+	if value, ok := m[key]; ok {
+		if strValue, ok := value.(string); ok {
+			return strValue
+		}
+	}
+	return ""
 }
 
 func (f *customJSONFormatter) getRuntimeData() (funcName, filename string, line int) {
-	pc, filePath, line, ok := runtime.Caller(4)
+	pc, filePath, line, ok := runtime.Caller(8)
 	if !ok {
 		return "unknown", "unknown", 0
 	}
@@ -96,39 +163,4 @@ func (f *customJSONFormatter) getRuntimeData() (funcName, filename string, line 
 		funcName = funcPath[strings.LastIndex(funcBefore, ".")+1:]
 	}
 	return
-}
-
-var levelColors = map[string]string{
-	"DEBUG":    color.Magenta.Render("DEBUG"),
-	"INFO":     color.Blue.Render("INFO"),
-	"WARN":     color.Yellow.Render("WARN"),
-	"ERROR":    color.Red.Render("ERROR"),
-	"FATAL":    color.Bold.Render(color.Red.Render("FATAL")),
-	"CRITICAL": color.Bold.Render(color.Red.Render("CRITICAL")),
-}
-
-func (f *customJSONFormatter) applyLevelColor(fullMsg string) string {
-	if f.logToFile {
-		return fullMsg
-	}
-
-	for level, colorLevel := range levelColors {
-		searchStr := fmt.Sprintf(`"level":"%s"`, level)
-		if strings.Contains(fullMsg, searchStr) {
-			return strings.Replace(fullMsg, searchStr, fmt.Sprintf(`"level":"%s"`, colorLevel), 1)
-		}
-	}
-
-	return fullMsg
-}
-
-func formatValue(v interface{}) string {
-	switch v := v.(type) {
-	case string:
-		return fmt.Sprintf(`"%s"`, v)
-	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, bool:
-		return fmt.Sprintf("%v", v)
-	default:
-		return fmt.Sprintf(`"%v"`, v)
-	}
 }
