@@ -3,154 +3,63 @@ package logger
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
 	"github.com/gookit/color"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type customJSONFormatter struct {
-	w         io.Writer
 	logToFile bool
-	attr      []any
+	attr      []zap.Field
 }
 
 func newCustomJSONFormatter(params LogParams) *customJSONFormatter {
-	hostname, err := os.Hostname()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error obtaining host name: %v\n", err)
-	}
-
 	res := &customJSONFormatter{
-		w:         os.Stdout,
 		logToFile: params.LogToFile,
 	}
 
 	if params.AppName != "" {
-		res.attr = append(res.attr, "app", params.AppName)
+		res.attr = append(res.attr, zap.String("app", params.AppName))
 	}
 
-	if hostname != "" {
-		res.attr = append(res.attr, "host", hostname)
+	hostname, err := os.Hostname()
+	if err == nil && hostname != "" {
+		res.attr = append(res.attr, zap.String("host", hostname))
 	}
 
 	return res
 }
 
-type orderedEvent struct {
-	Time  string                 `json:"time,omitempty"`
-	Level string                 `json:"level,omitempty"`
-	Msg   string                 `json:"msg,omitempty"`
-	File  string                 `json:"file,omitempty"`
-	Extra map[string]interface{} `json:"-"`
+func (f *customJSONFormatter) Run(entry zapcore.Entry) error {
+	funcName, _, _ := f.getRuntimeData()
+	entry.Message = fmt.Sprintf("%s: %s", funcName, entry.Message)
+	return nil
 }
 
-func (oe orderedEvent) MarshalJSON() ([]byte, error) {
-	// Start with the fixed fields
-	result := fmt.Sprintf(`{"time":"%s","level":"%s","msg":"%s"`, oe.Time, oe.Level, oe.Msg)
-
-	if oe.File != "" {
-		result += fmt.Sprintf(`,"file":"%s"`, oe.File)
+func (f *customJSONFormatter) formatLevel(l zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
+	levelStr := l.CapitalString()
+	if l == LevelCritical {
+		levelStr = "CRITICAL"
 	}
-
-	// Add extra fields
-	for k, v := range oe.Extra {
-		jsonValue, err := json.Marshal(v)
-		if err != nil {
-			return nil, err
-		}
-		result += fmt.Sprintf(`,"%s":%s`, k, string(jsonValue))
-	}
-
-	result += "}"
-	return []byte(result), nil
+	enc.AppendString(levelStr)
 }
 
-func (f *customJSONFormatter) Write(p []byte) (n int, err error) {
-	var rawEvent map[string]interface{}
-	if err := json.Unmarshal(p, &rawEvent); err != nil {
-		return 0, err
-	}
-
-	funcName, fileName, fileLine := f.getRuntimeData()
-
-	event := orderedEvent{
-		Time:  getStringValue(rawEvent, "time"),
-		Level: strings.ToUpper(getStringValue(rawEvent, "level")),
-		Msg:   fmt.Sprintf("%s: %s", funcName, getStringValue(rawEvent, "message")),
-		File:  fmt.Sprintf("%s:%d", fileName, fileLine),
-		Extra: make(map[string]interface{}),
-	}
-
-	if event.Level == "60" {
-		event.Level = "CRITICAL"
-	}
-
-	// Add custom attributes
-	for i := 0; i < len(f.attr); i += 2 {
-		if i+1 < len(f.attr) {
-			key, ok := f.attr[i].(string)
-			if ok {
-				event.Extra[key] = f.attr[i+1]
-			}
-		}
-	}
-
-	// Add remaining fields
-	for k, v := range rawEvent {
-		if k != "time" && k != "level" && k != "message" && k != "caller" {
-			event.Extra[k] = v
-		}
-	}
-
-	jsonData, err := json.Marshal(event)
-	if err != nil {
-		return 0, err
-	}
-
-	coloredJSON := f.applyLevelColor(string(jsonData))
-	return f.w.Write([]byte(coloredJSON + "\n"))
-}
-
-var levelColors = map[string]func(a ...interface{}) string{
+var levelColors = map[string]func(...any) string{
 	"DEBUG":    color.Magenta.Render,
 	"INFO":     color.Blue.Render,
 	"WARN":     color.Yellow.Render,
 	"ERROR":    color.Red.Render,
-	"FATAL":    func(a ...interface{}) string { return color.Bold.Render(color.Red.Render(a...)) },
-	"CRITICAL": func(a ...interface{}) string { return color.Bold.Render(color.Red.Render(a...)) },
-}
-
-func (f *customJSONFormatter) applyLevelColor(fullMsg string) string {
-	if f.logToFile {
-		return fullMsg
-	}
-
-	for level, colorFunc := range levelColors {
-		searchStr := fmt.Sprintf(`"level":"%s"`, level)
-		if strings.Contains(fullMsg, searchStr) {
-			coloredLevel := colorFunc(level)
-			return strings.Replace(fullMsg, searchStr, fmt.Sprintf(`"level":"%s"`, coloredLevel), 1)
-		}
-	}
-	return fullMsg
-}
-
-// Helper function to safely get string values from the map
-func getStringValue(m map[string]interface{}, key string) string {
-	if value, ok := m[key]; ok {
-		if strValue, ok := value.(string); ok {
-			return strValue
-		}
-	}
-	return ""
+	"FATAL":    func(a ...any) string { return color.Bold.Render(color.Red.Render(a...)) },
+	"CRITICAL": func(a ...any) string { return color.Bold.Render(color.Red.Render(a...)) },
 }
 
 func (f *customJSONFormatter) getRuntimeData() (funcName, filename string, line int) {
-	pc, filePath, line, ok := runtime.Caller(8)
+	pc, filePath, line, ok := runtime.Caller(6)
 	if !ok {
 		return "unknown", "unknown", 0
 	}
@@ -163,4 +72,69 @@ func (f *customJSONFormatter) getRuntimeData() (funcName, filename string, line 
 		funcName = funcPath[strings.LastIndex(funcBefore, ".")+1:]
 	}
 	return
+}
+
+func (f *customJSONFormatter) getDefaultFields() []zap.Field {
+	return f.attr
+}
+
+func (f *customJSONFormatter) ApplyColors(logEntry string) string {
+	if f.logToFile {
+		return logEntry
+	}
+
+	var entry map[string]interface{}
+	if err := json.Unmarshal([]byte(logEntry), &entry); err != nil {
+		return logEntry
+	}
+
+	level, ok := entry["level"].(string)
+	if ok {
+		if colorFunc, exists := levelColors[level]; exists {
+			entry["level"] = colorFunc(level)
+		}
+	}
+
+	orderedFields := []string{"time", "level", "msg", "file", "app", "host"}
+	var result strings.Builder
+	result.Grow(len(logEntry))
+
+	result.WriteString("{")
+	firstField := true
+
+	for _, field := range orderedFields {
+		if value, exists := entry[field]; exists {
+			if !firstField {
+				result.WriteString(",")
+			}
+			firstField = false
+			writeField(&result, field, value)
+			delete(entry, field)
+		}
+	}
+
+	for key, value := range entry {
+		if !firstField {
+			result.WriteString(",")
+		}
+		firstField = false
+		writeField(&result, key, value)
+	}
+
+	result.WriteString("}\n")
+	return result.String()
+}
+
+func writeField(b *strings.Builder, key string, value interface{}) {
+	b.WriteString(`"`)
+	b.WriteString(key)
+	b.WriteString(`":`)
+	if key == "level" {
+		b.WriteString(`"`)
+		b.WriteString(fmt.Sprint(value))
+		b.WriteString(`"`)
+	} else {
+		jsonValue, _ := json.Marshal(value)
+		b.Write(jsonValue)
+	}
 }
