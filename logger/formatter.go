@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/gookit/color"
@@ -35,12 +36,6 @@ func newCustomJSONFormatter(params LogParams) *customJSONFormatter {
 	return res
 }
 
-func (f *customJSONFormatter) Run(entry zapcore.Entry) error {
-	funcName, _, _ := f.getRuntimeData()
-	entry.Message = fmt.Sprintf("%s: %s", funcName, entry.Message)
-	return nil
-}
-
 func (f *customJSONFormatter) formatLevel(l zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
 	levelStr := l.CapitalString()
 	if l == LevelCritical {
@@ -59,7 +54,7 @@ var levelColors = map[string]func(...any) string{
 }
 
 func (f *customJSONFormatter) getRuntimeData() (funcName, filename string, line int) {
-	pc, filePath, line, ok := runtime.Caller(6)
+	pc, filePath, line, ok := runtime.Caller(9)
 	if !ok {
 		return "unknown", "unknown", 0
 	}
@@ -78,26 +73,45 @@ func (f *customJSONFormatter) getDefaultFields() []zap.Field {
 	return f.attr
 }
 
-func (f *customJSONFormatter) ApplyColors(logEntry string) string {
+func (f *customJSONFormatter) Format(logEntry string) string {
 	if f.logToFile {
 		return logEntry
 	}
 
-	var entry map[string]interface{}
+	var entry map[string]any
 	if err := json.Unmarshal([]byte(logEntry), &entry); err != nil {
 		return logEntry
 	}
 
+	entry = f.applyColorToLevel(entry)
+	entry = f.formatRuntimeDetails(entry)
+	return f.reorderFields(entry)
+}
+
+func (f *customJSONFormatter) applyColorToLevel(entry map[string]any) map[string]any {
 	level, ok := entry["level"].(string)
 	if ok {
 		if colorFunc, exists := levelColors[level]; exists {
 			entry["level"] = colorFunc(level)
 		}
 	}
+	return entry
+}
 
+func (f *customJSONFormatter) formatRuntimeDetails(entry map[string]any) map[string]any {
+	if msg, ok := entry["msg"].(string); ok {
+		funcName, _, _ := f.getRuntimeData()
+		entry["msg"] = fmt.Sprintf("%s: %s", funcName, msg)
+	}
+
+	return entry
+}
+
+func (f *customJSONFormatter) reorderFields(entry map[string]any) string {
 	orderedFields := []string{"time", "level", "msg", "file", "app", "host"}
 	var result strings.Builder
-	result.Grow(len(logEntry))
+
+	result.Grow(len(entry) * 10)
 
 	result.WriteString("{")
 	firstField := true
@@ -108,7 +122,7 @@ func (f *customJSONFormatter) ApplyColors(logEntry string) string {
 				result.WriteString(",")
 			}
 			firstField = false
-			writeField(&result, field, value)
+			writeField(&result, field, value, true)
 			delete(entry, field)
 		}
 	}
@@ -118,23 +132,47 @@ func (f *customJSONFormatter) ApplyColors(logEntry string) string {
 			result.WriteString(",")
 		}
 		firstField = false
-		writeField(&result, key, value)
+		writeField(&result, key, value, false)
 	}
 
 	result.WriteString("}\n")
 	return result.String()
 }
 
-func writeField(b *strings.Builder, key string, value interface{}) {
+func writeField(b *strings.Builder, key string, value any, isKnownString bool) {
 	b.WriteString(`"`)
 	b.WriteString(key)
 	b.WriteString(`":`)
-	if key == "level" {
+
+	if isKnownString {
 		b.WriteString(`"`)
 		b.WriteString(fmt.Sprint(value))
 		b.WriteString(`"`)
-	} else {
-		jsonValue, _ := json.Marshal(value)
-		b.Write(jsonValue)
+		return
+	}
+
+	// common primitive values do not need to do json.Marshal
+	switch v := value.(type) {
+	case string:
+		b.WriteString(`"`)
+		b.WriteString(v)
+		b.WriteString(`"`)
+	case int, int8, int16, int32, int64:
+		b.WriteString(strconv.FormatInt(v.(int64), 10))
+	case uint, uint8, uint16, uint32, uint64:
+		b.WriteString(strconv.FormatUint(v.(uint64), 10))
+	case float32, float64:
+		b.WriteString(strconv.FormatFloat(v.(float64), 'f', -1, 64))
+	case bool:
+		b.WriteString(strconv.FormatBool(v))
+	default:
+		jsonValue, err := json.Marshal(value)
+		if err != nil {
+			b.WriteString(`"`)
+			b.WriteString(fmt.Sprint(value))
+			b.WriteString(`"`)
+		} else {
+			b.Write(jsonValue)
+		}
 	}
 }

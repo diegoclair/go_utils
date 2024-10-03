@@ -51,7 +51,7 @@ func newLogger(params LogParams) *loggerImpl {
 		level,
 	)
 
-	logger := zap.New(core, zap.Hooks(formatter.Run), zap.AddCaller())
+	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(2))
 
 	return &loggerImpl{
 		params:    params,
@@ -66,7 +66,7 @@ type colorWriter struct {
 }
 
 func (cw *colorWriter) Write(p []byte) (n int, err error) {
-	colored := cw.formatter.ApplyColors(string(p))
+	colored := cw.formatter.Format(string(p))
 	return cw.w.Write([]byte(colored))
 }
 
@@ -150,7 +150,7 @@ func (l *loggerImpl) Fatalw(ctx context.Context, msg string, fields ...LogField)
 }
 
 const (
-	LevelCritical = zapcore.Level(127)
+	LevelCritical = zapcore.Level(60) // high number to avoid conflicts with other levels
 )
 
 func (l *loggerImpl) Critical(ctx context.Context, msg string) {

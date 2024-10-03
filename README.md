@@ -26,7 +26,7 @@ This package provides functions for handling and formatting dates and times. For
 This package provides a custom validator for Go structs, with additional validations for Brazilian CPF and CNPJ numbers. For more details, refer to the [validator README](./validator/README.md).
 
 ### logger 
-This package provides a logging wrapper for the slog package with some extra functionality
+This package provides a logging wrapper for the zap package with some extra functionality
 
 
 ## Contribution
