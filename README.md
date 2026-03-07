@@ -25,8 +25,11 @@ This package provides functions for handling and formatting dates and times. For
 ### validator Package
 This package provides a custom validator for Go structs, with additional validations for Brazilian CPF and CNPJ numbers. For more details, refer to the [validator README](./validator/README.md).
 
-### logger 
-This package provides a logging wrapper for the zap package with some extra functionality
+### logger
+This package provides a logging wrapper for the zap package with some extra functionality. For more details, refer to the [logger README](./logger/README.md).
+
+### config Package
+This package provides a generic configuration loader built on top of viper, supporting file-based config with environment variable overrides and hot-reload. For more details, refer to the [config README](./config/README.md).
 
 
 ## Contribution

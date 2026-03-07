@@ -18,7 +18,7 @@ type RestErr interface {
 	StatusCode() int
 	Error() string
 	GetError() string
-	Causes() interface{}
+	Causes() any
 }
 
 type restErr struct {
@@ -49,7 +49,7 @@ func (e restErr) Causes() any {
 }
 
 // NewRestError returns a instance of type restErr
-func NewRestError(message string, status int, err string, causes ...interface{}) RestErr {
+func NewRestError(message string, status int, err string, causes ...any) RestErr {
 	return restErr{
 		ErrMessage:    message,
 		ErrStatusCode: status,
@@ -99,7 +99,7 @@ func NewRestErrorFromBytes(bytes []byte) (RestErr, error) {
 }
 
 // NewBadRequestError returns a bad_request code error with your string message error
-func NewBadRequestError(message string, causes ...interface{}) RestErr {
+func NewBadRequestError(message string, causes ...any) RestErr {
 	return restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusBadRequest,
@@ -109,7 +109,7 @@ func NewBadRequestError(message string, causes ...interface{}) RestErr {
 }
 
 // NewNotFoundError returns a not_found code error with your string message error
-func NewNotFoundError(message string, causes ...interface{}) RestErr {
+func NewNotFoundError(message string, causes ...any) RestErr {
 	return restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusNotFound,
@@ -119,7 +119,7 @@ func NewNotFoundError(message string, causes ...interface{}) RestErr {
 }
 
 // NewInternalServerError returns a not_found code error with your string message error
-func NewInternalServerError(message string, causes ...interface{}) RestErr {
+func NewInternalServerError(message string, causes ...any) RestErr {
 	return &restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusInternalServerError,
@@ -129,7 +129,7 @@ func NewInternalServerError(message string, causes ...interface{}) RestErr {
 }
 
 // NewUnauthorizedError returns a unauthorized code error with your string message error
-func NewUnauthorizedError(message string, causes ...interface{}) RestErr {
+func NewUnauthorizedError(message string, causes ...any) RestErr {
 	return &restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusUnauthorized,
@@ -139,7 +139,7 @@ func NewUnauthorizedError(message string, causes ...interface{}) RestErr {
 }
 
 // NewUnprocessableEntity returns a unprocessable_entity code error with your string message error
-func NewUnprocessableEntity(message string, causes ...interface{}) RestErr {
+func NewUnprocessableEntity(message string, causes ...any) RestErr {
 	result := restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusUnprocessableEntity,
@@ -150,7 +150,7 @@ func NewUnprocessableEntity(message string, causes ...interface{}) RestErr {
 	return result
 }
 
-func NewConflictError(message string, causes ...interface{}) RestErr {
+func NewConflictError(message string, causes ...any) RestErr {
 	result := restErr{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusConflict,

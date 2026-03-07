@@ -13,7 +13,7 @@ func Test_validatorImpl_ValidateStruct(t *testing.T) {
 	assert.NoError(t, err)
 
 	type args struct {
-		dataSet interface{}
+		dataSet any
 	}
 	tests := []struct {
 		name       string

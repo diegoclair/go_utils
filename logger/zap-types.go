@@ -65,7 +65,7 @@ func Err(err error) LogField {
 	return ErrorField{Err: err}
 }
 
-func Any(key string, value interface{}) LogField {
+func Any(key string, value any) LogField {
 	return AnyField{Key: key, Value: value}
 }
 
@@ -206,7 +206,7 @@ func (f ErrorField) ToZapField() zap.Field {
 // AnyField represents a log field of any type
 type AnyField struct {
 	Key   string
-	Value interface{}
+	Value any
 }
 
 func (f AnyField) ToZapField() zap.Field {

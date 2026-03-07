@@ -19,15 +19,15 @@ type Validator interface {
 	// cpf - validate if the input is a valid cpf
 	// cnpj - validate if the input is a valid cnpj
 	// required_trim - validate the tag required after trim the input (only valid for string fields type)
-	ValidateStruct(ctx context.Context, dataSet interface{}) error
+	ValidateStruct(ctx context.Context, dataSet any) error
 
 	// Some default Methods from go-playground/validator/v10 package
-	Var(field interface{}, tag string) error
+	Var(field any, tag string) error
 	RegisterValidation(tag string, fn validator.Func) error
 	RegisterAlias(alias string, tags string)
-	StructExcept(current interface{}, fields ...string) error
-	StructPartial(current interface{}, fields ...string) error
-	StructFiltered(current interface{}, filter validator.FilterFunc) error
+	StructExcept(current any, fields ...string) error
+	StructPartial(current any, fields ...string) error
+	StructFiltered(current any, filter validator.FilterFunc) error
 }
 
 type validatorImpl struct {
@@ -49,7 +49,7 @@ func NewValidator() (Validator, error) {
 	return v, nil
 }
 
-func (v *validatorImpl) ValidateStruct(ctx context.Context, dataSet interface{}) error {
+func (v *validatorImpl) ValidateStruct(ctx context.Context, dataSet any) error {
 	err := v.validator.StructCtx(ctx, dataSet)
 	if err != nil {
 		invalidArgument, ok := err.(*validator.InvalidValidationError)
@@ -151,7 +151,7 @@ func (v *validatorImpl) registerCustomValidations() error {
 	return nil
 }
 
-func (v *validatorImpl) Var(field interface{}, tag string) error {
+func (v *validatorImpl) Var(field any, tag string) error {
 	return v.validator.Var(field, tag)
 }
 
@@ -163,14 +163,14 @@ func (v *validatorImpl) RegisterAlias(alias string, tags string) {
 	v.validator.RegisterAlias(alias, tags)
 }
 
-func (v *validatorImpl) StructExcept(current interface{}, fields ...string) error {
+func (v *validatorImpl) StructExcept(current any, fields ...string) error {
 	return v.validator.StructExcept(current, fields...)
 }
 
-func (v *validatorImpl) StructPartial(current interface{}, fields ...string) error {
+func (v *validatorImpl) StructPartial(current any, fields ...string) error {
 	return v.validator.StructPartial(current, fields...)
 }
 
-func (v *validatorImpl) StructFiltered(current interface{}, filter validator.FilterFunc) error {
+func (v *validatorImpl) StructFiltered(current any, filter validator.FilterFunc) error {
 	return v.validator.StructFiltered(current, filter)
 }
