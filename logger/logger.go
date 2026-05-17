@@ -1,3 +1,24 @@
+// Package logger is DEPRECATED.
+//
+// Deprecated: Use github.com/diegoclair/logger instead. The new package has
+// a simplified API: a single Attr(key, value) constructor for any field
+// type, ctx-based attribute accumulation via WithAttrs, and dropped the
+// bloated Info/Infof/Infow variants in favor of Info(ctx, msg, ...Field).
+//
+// Migration cheat sheet:
+//
+//	go_utils/logger                      → diegoclair/logger
+//	logger.LogParams                     → logger.Params
+//	LogParams.AddAttributesFromContext   → Params.ContextExtractor
+//	logger.LogField                      → logger.Field
+//	logger.String("k", v)                → logger.Attr("k", v)
+//	logger.Int("k", v)                   → logger.Attr("k", v)
+//	logger.Err(err)                      → logger.Attr("error", err)
+//	log.Infof(ctx, "x=%d", 1)            → log.Info(ctx, fmt.Sprintf("x=%d", 1))
+//	log.Infow(ctx, msg, f1, f2)          → log.Info(ctx, msg, f1, f2)
+//
+// This package remains here for backward compatibility with existing
+// consumers.
 package logger
 
 import (
@@ -5,6 +26,8 @@ import (
 )
 
 // LogParams is the struct that contains the parameters to create a logger
+//
+// Deprecated: Use logger.Params from github.com/diegoclair/logger.
 type LogParams struct {
 	// AppName is the name of your application, that will be used as a field in the log
 	AppName string
@@ -19,12 +42,16 @@ type LogParams struct {
 	LogToFile bool
 }
 
-// LogParams is the struct that contains the parameters to create a logger
+// New creates a logger instance.
+//
+// Deprecated: Use logger.New from github.com/diegoclair/logger.
 func New(params LogParams) Logger {
 	return newLogger(params)
 }
 
-// Logger is a wrapper of the zerolog library adding some extra functionality
+// Logger is a wrapper of the zap library adding some extra functionality.
+//
+// Deprecated: Use logger.Logger from github.com/diegoclair/logger.
 type Logger interface {
 	// Info logs a message with INFO level
 	Info(ctx context.Context, msg string)

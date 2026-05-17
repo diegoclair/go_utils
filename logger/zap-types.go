@@ -7,6 +7,9 @@ import (
 )
 
 // LogField is an interface that represents a generic log field
+//
+// Deprecated: Use logger.Field from github.com/diegoclair/logger, built via
+// logger.Attr(key, value) which auto-detects the value type.
 type LogField interface {
 	ToZapField() zap.Field
 }

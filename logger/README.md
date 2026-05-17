@@ -1,5 +1,32 @@
 # Logger Package
 
+> **⚠️ DEPRECATED**
+>
+> This package is **deprecated**. Use [`github.com/diegoclair/logger`](https://github.com/diegoclair/logger) instead — same zap backend, but with a simplified API:
+>
+> - Single `Attr(key, value)` constructor that auto-detects the value type — no more `String`, `Int`, `Int64`, `Float32`, `Bool`, `Duration`, `Err`, etc.
+> - Context-based attribute accumulation via `WithAttrs(ctx, fields...)` — attributes propagate through your call chain.
+> - Dropped the bloated `Infof` / `Infow` variants — just `Info(ctx, msg, ...Field)`. Use `fmt.Sprintf` when you really need formatting.
+> - Built-in `NewNoop()` for tests.
+>
+> This package remains here for backward compatibility with existing consumers.
+>
+> ### Migration cheat sheet
+>
+> | Old (`go_utils/logger`)                    | New (`diegoclair/logger`)               |
+> |--------------------------------------------|-----------------------------------------|
+> | `logger.LogParams`                         | `logger.Params`                         |
+> | `LogParams.AddAttributesFromContext`       | `Params.ContextExtractor`               |
+> | `LogParams.LogToFile`                      | (removed)                               |
+> | `logger.LogField`                          | `logger.Field`                          |
+> | `logger.String("k", v)`                    | `logger.Attr("k", v)`                   |
+> | `logger.Int("k", v)`                       | `logger.Attr("k", v)`                   |
+> | `logger.Err(err)`                          | `logger.Attr("error", err)`             |
+> | `log.Infof(ctx, "x=%d", n)`                | `log.Info(ctx, fmt.Sprintf("x=%d", n))` |
+> | `log.Infow(ctx, msg, f1, f2)`              | `log.Info(ctx, msg, f1, f2)`            |
+> | n/a                                        | `logger.WithAttrs(ctx, …)` then `log.Info(ctx, msg)` |
+> | n/a                                        | `logger.NewNoop()` for tests            |
+
 ## Overview
 
 This package provides a powerful and flexible logging wrapper for Go applications, built on top of the `zap` logging library. It offers enhanced functionality and ease of use compared to the standard logging packages.
