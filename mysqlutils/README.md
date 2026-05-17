@@ -1,5 +1,24 @@
 # mysqlutils Package
 
+> **⚠️ DEPRECATED**
+>
+> This package is **deprecated** and is no longer maintained. Projects have migrated:
+> - From **MySQL** → **PostgreSQL** (so MySQL-specific error parsing is no longer needed).
+> - From [`resterrors`](../resterrors/README.md) → [`apperr`](https://github.com/diegoclair/apperr) (transport-agnostic errors).
+>
+> **Recommended replacement:** handle database errors at the repository layer and return `apperr` definitions directly. For example:
+>
+> ```go
+> if errors.Is(err, sql.ErrNoRows) {
+>     return apperr.ErrNotFound
+> }
+> var pgErr *pgconn.PgError
+> if errors.As(err, &pgErr) && pgErr.Code == "23505" { // unique_violation
+>     return apperr.ErrDuplicateEntry
+> }
+> return apperr.ErrInternal.Wrap(err)
+> ```
+
 ## Description
 
 This package provides a function for handling MySQL errors and converting them into [RESTful errors package](../resterrors/README.md).

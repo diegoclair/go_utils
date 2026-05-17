@@ -1,3 +1,11 @@
+// Package resterrors is DEPRECATED.
+//
+// Deprecated: Use github.com/diegoclair/apperr instead. This package couples
+// business code to HTTP status codes, which makes i18n and multi-transport
+// (gRPC, GraphQL) hard. apperr is transport-agnostic: services return Kind +
+// Code, and the transport layer (e.g. apperr/httpmap) maps it to HTTP.
+//
+// This package remains for backward compatibility with existing consumers.
 package resterrors
 
 import (
@@ -13,6 +21,8 @@ import (
 )
 
 // RestErr interface
+//
+// Deprecated: Use apperr.AppError (github.com/diegoclair/apperr) instead.
 type RestErr interface {
 	Message() string
 	StatusCode() int
@@ -49,6 +59,9 @@ func (e restErr) Causes() any {
 }
 
 // NewRestError returns a instance of type restErr
+//
+// Deprecated: Use apperr.Define to declare project-specific errors, or use
+// the built-in sentinels from github.com/diegoclair/apperr.
 func NewRestError(message string, status int, err string, causes ...any) RestErr {
 	return restErr{
 		ErrMessage:    message,
@@ -59,6 +72,9 @@ func NewRestError(message string, status int, err string, causes ...any) RestErr
 }
 
 // GoSwagDefaultResponseErrors returns the default response errors for the GoSwag library
+//
+// Deprecated: Build GoSwag response error types from the apperr/httpmap
+// response struct instead. See github.com/diegoclair/apperr.
 func GoSwagDefaultResponseErrors() []models.ReturnType {
 	return []models.ReturnType{
 		{
@@ -90,6 +106,10 @@ func GoSwagDefaultResponseErrors() []models.ReturnType {
 
 // NewRestErrorFromBytes returns a RestErr response format by result from another api using resterror response
 // example: if you call to another api and this api response a resterror response format, you can use this function to convert the response to RestErr  with response.Bytes()
+//
+// Deprecated: Use github.com/diegoclair/apperr. For deserializing responses
+// from upstream services, define a project-level DTO and convert into
+// apperr.Definition explicitly.
 func NewRestErrorFromBytes(bytes []byte) (RestErr, error) {
 	var apiErr restErr
 	if err := json.Unmarshal(bytes, &apiErr); err != nil {
@@ -99,6 +119,9 @@ func NewRestErrorFromBytes(bytes []byte) (RestErr, error) {
 }
 
 // NewBadRequestError returns a bad_request code error with your string message error
+//
+// Deprecated: Use apperr.ErrValidation or apperr.ErrInvalidInput from
+// github.com/diegoclair/apperr.
 func NewBadRequestError(message string, causes ...any) RestErr {
 	return restErr{
 		ErrMessage:    message,
@@ -109,6 +132,9 @@ func NewBadRequestError(message string, causes ...any) RestErr {
 }
 
 // NewNotFoundError returns a not_found code error with your string message error
+//
+// Deprecated: Use apperr.ErrNotFound or apperr.ErrRecordNotFound from
+// github.com/diegoclair/apperr.
 func NewNotFoundError(message string, causes ...any) RestErr {
 	return restErr{
 		ErrMessage:    message,
@@ -119,6 +145,9 @@ func NewNotFoundError(message string, causes ...any) RestErr {
 }
 
 // NewInternalServerError returns a not_found code error with your string message error
+//
+// Deprecated: Use apperr.ErrInternal.Wrap(err) from
+// github.com/diegoclair/apperr.
 func NewInternalServerError(message string, causes ...any) RestErr {
 	return &restErr{
 		ErrMessage:    message,
@@ -129,6 +158,9 @@ func NewInternalServerError(message string, causes ...any) RestErr {
 }
 
 // NewUnauthorizedError returns a unauthorized code error with your string message error
+//
+// Deprecated: Use apperr.ErrUnauthenticated, apperr.ErrTokenInvalid, or
+// apperr.ErrTokenExpired from github.com/diegoclair/apperr.
 func NewUnauthorizedError(message string, causes ...any) RestErr {
 	return &restErr{
 		ErrMessage:    message,
@@ -139,6 +171,11 @@ func NewUnauthorizedError(message string, causes ...any) RestErr {
 }
 
 // NewUnprocessableEntity returns a unprocessable_entity code error with your string message error
+//
+// Deprecated: Use apperr.ErrValidation from github.com/diegoclair/apperr,
+// optionally with .WithMeta to carry field-level details. The
+// github.com/diegoclair/appvalidator/apperrmap package does this
+// automatically.
 func NewUnprocessableEntity(message string, causes ...any) RestErr {
 	result := restErr{
 		ErrMessage:    message,
@@ -150,6 +187,10 @@ func NewUnprocessableEntity(message string, causes ...any) RestErr {
 	return result
 }
 
+// NewConflictError returns a conflict code error with your string message error.
+//
+// Deprecated: Use apperr.ErrConflict or apperr.ErrDuplicateEntry from
+// github.com/diegoclair/apperr.
 func NewConflictError(message string, causes ...any) RestErr {
 	result := restErr{
 		ErrMessage:    message,

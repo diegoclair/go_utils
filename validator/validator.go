@@ -1,3 +1,10 @@
+// Package validator is DEPRECATED.
+//
+// Deprecated: Use github.com/diegoclair/appvalidator instead. This package is
+// kept only for backward compatibility with consumers that still rely on
+// resterrors. The new package returns a structured *ValidationError with
+// per-field details and is transport-agnostic. For apperr integration use
+// github.com/diegoclair/appvalidator/apperrmap.
 package validator
 
 import (
@@ -11,6 +18,9 @@ import (
 	"github.com/klassmann/cpfcnpj"
 )
 
+// Validator is DEPRECATED.
+//
+// Deprecated: Use github.com/diegoclair/appvalidator.Validator instead.
 type Validator interface {
 	// ValidateStruct validates the given data set using the validator instance.
 	// It use the go-playground/validator/v10 package to validate the data set and return a better error message for some tags.
@@ -35,6 +45,10 @@ type validatorImpl struct {
 }
 
 // NewValidator returns a new instance of validator interface with the custom validations tags validations.
+//
+// Deprecated: Use github.com/diegoclair/appvalidator.New (or
+// github.com/diegoclair/appvalidator/apperrmap.New for apperr integration)
+// instead.
 func NewValidator() (Validator, error) {
 	v := &validatorImpl{
 		// the option validator.WithRequiredStructEnabled() will be default on v11 of go-playground/validator

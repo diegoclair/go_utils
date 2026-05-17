@@ -1,3 +1,10 @@
+// Package mysqlutils is DEPRECATED.
+//
+// Deprecated: This package is no longer maintained. Projects have migrated
+// from MySQL to PostgreSQL and from resterrors to
+// github.com/diegoclair/apperr. For new code, handle database errors at the
+// repository layer and return apperr definitions (e.g. apperr.ErrNotFound,
+// apperr.ErrDuplicateEntry) directly.
 package mysqlutils
 
 import (
@@ -25,6 +32,9 @@ var (
 
 // SQLNotFound checks if the given error message indicates that no SQL rows or records were found.
 // It returns true if no rows or records were found, otherwise false.
+//
+// Deprecated: Use errors.Is(err, sql.ErrNoRows) at the repository layer and
+// return apperr.ErrNotFound (or a project-specific Definition).
 func SQLNotFound(err string) bool {
 	noRowsIdx := noSQLRowsRE.FindStringIndex(err)
 	if len(noRowsIdx) > 0 {
@@ -37,6 +47,12 @@ func SQLNotFound(err string) bool {
 }
 
 // HandleMySQLError handles the MySQL errors and returns a corresponding REST error.
+//
+// Deprecated: This function returns a resterrors.RestErr, which is also
+// deprecated. New code should inspect database errors at the repository
+// layer and return apperr definitions (e.g. apperr.ErrDuplicateEntry,
+// apperr.ErrNotFound) directly. See github.com/diegoclair/apperr.
+//
 // It takes an error as input and checks if it is a MySQL error. If it is not a MySQL error,
 // it checks if the error message contains a specific string indicating a "no rows" error.
 // If it does, it returns a NotFoundError with a custom message. Otherwise, it returns an

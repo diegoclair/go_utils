@@ -1,5 +1,16 @@
 # validator Package
 
+> **⚠️ DEPRECATED**
+>
+> This package is **deprecated** and will not receive new features. It remains here for backward compatibility with consumers still using [`resterrors`](../resterrors/README.md).
+>
+> **New code should use [`github.com/diegoclair/appvalidator`](https://github.com/diegoclair/appvalidator)**, which:
+> - Returns a structured `*ValidationError` with per-field details (`Field`, `Tag`, `Param`, `Message`) instead of a flat string list, so the frontend can do i18n by error code.
+> - Is transport-agnostic — no `resterrors`/HTTP coupling in the core.
+> - Integrates with [`apperr`](https://github.com/diegoclair/apperr) via the optional [`appvalidator/apperrmap`](https://github.com/diegoclair/appvalidator/tree/main/apperrmap) sub-package.
+>
+> Migration: replace `validator.NewValidator()` with `appvalidator.New()` (or `apperrmap.New()` if you use `apperr`). The custom tags (`cpf`, `cnpj`, `required_trim`) and the standard `go-playground/validator` tags work the same way.
+
 ## Description
 
 This package provides a custom validator for Go Structs, with additional validations:

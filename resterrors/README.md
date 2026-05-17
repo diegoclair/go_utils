@@ -1,5 +1,29 @@
 # Resterrors Package
 
+> **⚠️ DEPRECATED**
+>
+> This package is **deprecated**. New code should use [`github.com/diegoclair/apperr`](https://github.com/diegoclair/apperr), which is transport-agnostic: business code returns `Kind` + `Code`, and the transport layer maps to HTTP (via [`apperr/httpmap`](https://github.com/diegoclair/apperr/tree/main/httpmap)), gRPC, GraphQL, etc.
+>
+> Benefits of migrating:
+> - Business code stops importing `net/http` and HTTP status codes.
+> - Errors carry stable `Code` strings (e.g. `"USER_NOT_FOUND"`) — frontend can do i18n.
+> - Structured `meta` for dynamic data (e.g. `retry_after_minutes`, validation `fields`).
+> - Works with `errors.Is` / `errors.As` natively.
+>
+> This package remains here for backward compatibility with existing consumers (e.g. `lybel`, `rrr`). For validation specifically, see [`appvalidator/apperrmap`](https://github.com/diegoclair/appvalidator/tree/main/apperrmap).
+>
+> ### Migration cheat sheet
+>
+> | Old (resterrors)                | New (apperr)                                            |
+> |---------------------------------|---------------------------------------------------------|
+> | `NewBadRequestError`            | `apperr.ErrValidation` / `apperr.ErrInvalidInput`       |
+> | `NewNotFoundError`              | `apperr.ErrNotFound` / `apperr.ErrRecordNotFound`       |
+> | `NewInternalServerError`        | `apperr.ErrInternal.Wrap(err)`                          |
+> | `NewUnauthorizedError`          | `apperr.ErrUnauthenticated` / `apperr.ErrTokenExpired`  |
+> | `NewUnprocessableEntity`        | `apperr.ErrValidation.WithMeta("fields", …)`            |
+> | `NewConflictError`              | `apperr.ErrConflict` / `apperr.ErrDuplicateEntry`       |
+> | `RestErr` (interface)           | `apperr.AppError` (interface)                           |
+
 ## Description
 
 This package provides a structure and functions for handling errors in a RESTful format.
